@@ -65,3 +65,4 @@ go-electrum is licensed under the MIT license. See LICENSE file for more details
 Copyright (c) 2019 Ian Descôteaux  
 Copyright (c) 2015 Tristan Rice
 
+Based on Tristan Rice [go-electrum](https://github.com/d4l3k/go-electrum) unmaintained library.
