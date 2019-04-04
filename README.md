@@ -1,6 +1,6 @@
 # go-electrum [![GoDoc](https://godoc.org/github.com/checksum0/go-electrum?status.svg)](https://godoc.org/github.com/checksum0/go-electrum)
-A pure Go [Electrum](https://electrum.org/) bitcoin library supporting the latest [ElectrumX](https://github.com/kyuupichan/electrumx) protocol versions.
-This makes it easy to write bitcoin based services using Go without having to run a full bitcoin node.
+A pure Go [Electrum](https://electrum.org/) bitcoin library supporting the latest [ElectrumX](https://github.com/kyuupichan/electrumx) protocol versions.  
+This makes it easy to write cryptocurrencies based services in a trustless fashion using Go without having to run a full node.
 
 ![go-electrum](https://raw.githubusercontent.com/checksum0/go-electrum/master/media/logo.png)
 
@@ -62,6 +62,6 @@ func main() {
 # License
 go-electrum is licensed under the MIT license. See LICENSE file for more details.
 
-Copyright (c) 2019 Ian Descôteaux
+Copyright (c) 2019 Ian Descôteaux  
 Copyright (c) 2015 Tristan Rice
 
