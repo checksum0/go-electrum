@@ -1,5 +1,12 @@
 package electrum
 
+/* TODO:
+ * - masternode.announce.broadcast
+ * - masternode.list
+ * - protx.diff
+ * - protx.info
+ */
+
 // EstimateFee ...
 func (s *Server) EstimateFee(target uint32) (float32, error) {
 	resp := &struct {
