@@ -7,6 +7,10 @@ package electrum
  * - protx.info
  */
 
+type basicResp struct {
+	Result string `json:"result"`
+}
+
 // EstimateFee ...
 func (s *Server) EstimateFee(target uint32) (float32, error) {
 	resp := &struct {

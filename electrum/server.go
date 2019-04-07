@@ -1,9 +1,5 @@
 package electrum
 
-type basicResp struct {
-	Result string `json:"result"`
-}
-
 // Ping ...
 func (s *Server) Ping() error {
 	err := s.request("server.ping", []interface{}{}, nil)
