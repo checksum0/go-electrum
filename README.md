@@ -50,7 +50,7 @@ func main() {
 	// Asking the server for the balance of address 1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa
 	// We must use scripthash of the address now as explained in ElectrumX docs
 	scripthash := "8b01df4e368ea28f8dc0423bcf7a4923e3a12d307c875e47a0cfbf90b5c39161"
-	balance, err := server.ScripthashGetBalance(scripthash)
+	balance, err := server.GetBalance(scripthash)
 	if err != nil {
 		log.Fatal(err)
 	}
