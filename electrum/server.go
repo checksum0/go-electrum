@@ -1,13 +1,17 @@
 package electrum
 
-// Ping ...
+// Ping send a ping to the target server to ensure it is responding and
+// keeping the session alive.
+// https://electrumx.readthedocs.io/en/latest/protocol-methods.html#server-ping
 func (s *Server) Ping() error {
 	err := s.request("server.ping", []interface{}{}, nil)
 
 	return err
 }
 
-// ServerAddPeer ...
+// ServerAddPeer adds your new server into the remote server own peers list.
+// This should not be used if you are a client.
+// https://electrumx.readthedocs.io/en/latest/protocol-methods.html#server-add-peer
 func (s *Server) ServerAddPeer(features *featuresResp) error {
 	resp := &basicResp{}
 	err := s.request("server.add_peer", []interface{}{features}, resp)
@@ -15,7 +19,8 @@ func (s *Server) ServerAddPeer(features *featuresResp) error {
 	return err
 }
 
-// ServerBanner ...
+// ServerBanner returns the banner for this remote server.
+// https://electrumx.readthedocs.io/en/latest/protocol-methods.html#server-banner
 func (s *Server) ServerBanner() (string, error) {
 	resp := &basicResp{}
 	err := s.request("server.banner", []interface{}{}, resp)
@@ -23,7 +28,8 @@ func (s *Server) ServerBanner() (string, error) {
 	return resp.Result, err
 }
 
-// ServerDonation ...
+// ServerDonation returns the donation address for this remote server
+// https://electrumx.readthedocs.io/en/latest/protocol-methods.html#server-donation-address
 func (s *Server) ServerDonation() (string, error) {
 	resp := &basicResp{}
 	err := s.request("server.donation_address", []interface{}{}, resp)
@@ -46,7 +52,8 @@ type featuresResp struct {
 	HashFunction  string          `json:"hash_function"`
 }
 
-// ServerFeatures ...
+// ServerFeatures returns a list of features and services supported by the remote server.
+// https://electrumx.readthedocs.io/en/latest/protocol-methods.html#server-features
 func (s *Server) ServerFeatures() (interface{}, error) {
 	resp := &struct {
 		Result *featuresResp `json:"result"`
@@ -56,7 +63,8 @@ func (s *Server) ServerFeatures() (interface{}, error) {
 	return &resp.Result, err
 }
 
-// ServerPeers ...
+// ServerPeers returns a list of peers this remote server is aware of.
+// https://electrumx.readthedocs.io/en/latest/protocol-methods.html#server-peers-subscribe
 func (s *Server) ServerPeers() (interface{}, error) {
 	resp := &struct {
 		Result [][]interface{} `json:"result"`
@@ -66,7 +74,9 @@ func (s *Server) ServerPeers() (interface{}, error) {
 	return resp.Result, err
 }
 
-// ServerVersion ...
+// ServerVersion identify the client to the server, and negotiate the protocol version.
+// This call must be sent first, or the server will default to an older protocol version.
+// https://electrumx.readthedocs.io/en/latest/protocol-methods.html#server-version
 func (s *Server) ServerVersion() (serverVer, protocolVer string, err error) {
 	resp := &struct {
 		Result []string `json:"result"`
