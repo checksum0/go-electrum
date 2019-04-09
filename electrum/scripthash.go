@@ -33,26 +33,26 @@ type MempoolResp struct {
 }
 
 // GetHistory returns the confirmed and unconfirmed history for a scripthash.
-func (s *Server) GetHistory(scripthash string) ([]MempoolResp, error) {
+func (s *Server) GetHistory(scripthash string) (*[]MempoolResp, error) {
 	resp := &struct {
-		Result []MempoolResp `json:"result"`
+		Result *[]MempoolResp `json:"result"`
 	}{}
 	err := s.request("blockchain.scripthash.get_history", []interface{}{scripthash}, resp)
 	if err != nil {
-		return []MempoolResp{}, err
+		return &[]MempoolResp{}, err
 	}
 
 	return resp.Result, err
 }
 
 // GetMempool returns the unconfirmed transacations of a scripthash.
-func (s *Server) GetMempool(scripthash string) ([]MempoolResp, error) {
+func (s *Server) GetMempool(scripthash string) (*[]MempoolResp, error) {
 	resp := &struct {
-		Result []MempoolResp `json:"result"`
+		Result *[]MempoolResp `json:"result"`
 	}{}
 	err := s.request("blockchain.scripthash.get_mempool", []interface{}{scripthash}, resp)
 	if err != nil {
-		return []MempoolResp{}, err
+		return &[]MempoolResp{}, err
 	}
 
 	return resp.Result, err
@@ -67,13 +67,13 @@ type UnspentResp struct {
 }
 
 // ListUnspent returns an ordered list of UTXOs for a scripthash.
-func (s *Server) ListUnspent(scripthash string) ([]UnspentResp, error) {
+func (s *Server) ListUnspent(scripthash string) (*[]UnspentResp, error) {
 	resp := &struct {
-		Result []UnspentResp `json:"result"`
+		Result *[]UnspentResp `json:"result"`
 	}{}
 	err := s.request("blockchain.scripthash.listunspent", []interface{}{scripthash}, resp)
 	if err != nil {
-		return []UnspentResp{}, err
+		return &[]UnspentResp{}, err
 	}
 
 	return resp.Result, err
