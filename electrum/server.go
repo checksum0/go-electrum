@@ -69,9 +69,13 @@ func (s *Server) ServerVersion() (serverVer, protocolVer string, err error) {
 		Versions []string `json:"result"`
 	}{}
 	err = s.request("server.version", []interface{}{ClientVersion, ProtocolVersion}, resp)
-
-	serverVer = resp.Versions[0]
-	protocolVer = resp.Versions[1]
+	if err != nil {
+		serverVer = ""
+		protocolVer = ""
+	} else {
+		serverVer = resp.Versions[0]
+		protocolVer = resp.Versions[1]
+	}
 
 	return
 }
