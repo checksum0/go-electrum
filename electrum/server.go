@@ -42,7 +42,7 @@ type host struct {
 	SSLPort uint16 `json:"ssl_port,omitempty"`
 }
 
-// FeatureResp represent the data sent or receive in RPC call "server.features" and
+// FeaturesResp represent the data sent or receive in RPC call "server.features" and
 // "server.add_peer".
 type FeaturesResp struct {
 	GenesisHash   string          `json:"genesis_hash"`
