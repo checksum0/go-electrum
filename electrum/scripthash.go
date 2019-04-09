@@ -1,10 +1,5 @@
 package electrum
 
-/* TODO:
- * - blockchain.scripthash.utxos (version 1.5)
- * - blockchain.scripthash.history (version 1.5)
- */
-
 // BalanceResp represents the response to GetBalance().
 type BalanceResp struct {
 	Confirmed   float64 `json:"confirmed"`
