@@ -39,7 +39,7 @@ func (s *Server) GetHistory(scripthash string) ([]*MempoolResp, error) {
 	}{}
 	err := s.request("blockchain.scripthash.get_history", []interface{}{scripthash}, resp)
 	if err != nil {
-		return []*MempoolResp{}, err
+		return nil, err
 	}
 
 	return resp.Result, err
@@ -52,7 +52,7 @@ func (s *Server) GetMempool(scripthash string) ([]*MempoolResp, error) {
 	}{}
 	err := s.request("blockchain.scripthash.get_mempool", []interface{}{scripthash}, resp)
 	if err != nil {
-		return []*MempoolResp{}, err
+		return nil, err
 	}
 
 	return resp.Result, err
@@ -73,7 +73,7 @@ func (s *Server) ListUnspent(scripthash string) ([]*UnspentResp, error) {
 	}{}
 	err := s.request("blockchain.scripthash.listunspent", []interface{}{scripthash}, resp)
 	if err != nil {
-		return []*UnspentResp{}, err
+		return nil, err
 	}
 
 	return resp.Result, err

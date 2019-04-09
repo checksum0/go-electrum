@@ -64,14 +64,14 @@ type ScriptPubkey struct {
 // https://electrumx.readthedocs.io/en/latest/protocol-methods.html#blockchain-transaction-get
 func (s *Server) TransactionGet(txHash string) (*TransactionResp, error) {
 	resp := &struct {
-		Result *TransactionResp `json:"result"`
+		Result TransactionResp `json:"result"`
 	}{}
 	err := s.request("blockchain.transaction.get", []interface{}{txHash, true}, resp)
 	if err != nil {
-		return &TransactionResp{}, err
+		return nil, err
 	}
 
-	return resp.Result, nil
+	return &resp.Result, nil
 }
 
 // TransactionGetRaw gets a raw encoded transaction.
@@ -97,14 +97,14 @@ type MerkleResp struct {
 // https://electrumx.readthedocs.io/en/latest/protocol-methods.html#blockchain-transaction-get-merkle
 func (s *Server) TransactionGetMerkle(txHash string, height uint32) (*MerkleResp, error) {
 	resp := &struct {
-		Result *MerkleResp `json:"result"`
+		Result MerkleResp `json:"result"`
 	}{}
 	err := s.request("blockchain.transaction.get_merkle", []interface{}{txHash, height}, resp)
 	if err != nil {
-		return &MerkleResp{}, err
+		return nil, err
 	}
 
-	return resp.Result, err
+	return &resp.Result, err
 }
 
 // TransactionHashFromPosition returns the transaction hash for a specific position in a block.
@@ -129,12 +129,12 @@ type MerkleFromPosResp struct {
 // https://electrumx.readthedocs.io/en/latest/protocol-methods.html#blockchain-transaction-id-from-pos
 func (s *Server) TransactionMerkleFromPosition(height, position uint32) (*MerkleFromPosResp, error) {
 	resp := struct {
-		Result *MerkleFromPosResp `json:"result"`
+		Result MerkleFromPosResp `json:"result"`
 	}{}
 	err := s.request("blockchain.transaction.id_from_pos", []interface{}{height, position, true}, resp)
 	if err != nil {
-		return &MerkleFromPosResp{}, err
+		return nil, err
 	}
 
-	return resp.Result, err
+	return &resp.Result, err
 }
