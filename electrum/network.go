@@ -14,48 +14,52 @@ import (
 )
 
 const (
-	// ClientVersion ...
+	// ClientVersion identifies the client version/name to the remote server
 	ClientVersion = "go-electrum1.0"
 
-	// ProtocolVersion ...
+	// ProtocolVersion identifies the support protocol version to the remote server
 	ProtocolVersion = "1.4"
 
+	// TCP connection and server request timeout duration.
 	connTimeout = 30 * time.Second
 	nl          = byte('\n')
 )
 
 var (
-	// DebugMode ...
+	// DebugMode provides debug output on communications with the remote server if enabled.
 	DebugMode bool
 
-	// ErrServerConnected ...
+	// ErrServerConnected throws an error if remote server is already connected.
 	ErrServerConnected = errors.New("server is already connected")
 
-	// ErrServerShutdown ...
+	// ErrServerShutdown throws an error if remote server has shutdown.
 	ErrServerShutdown = errors.New("server has shutdown")
 
-	// ErrTimeout ...
+	// ErrTimeout throws an error if request has timed out
 	ErrTimeout = errors.New("request timeout")
 
-	// ErrNotImplemented ...
-	ErrNotImplemented = errors.New("API call is not implemented")
+	// ErrNotImplemented throws an error if this RPC call has not been implemented yet.
+	ErrNotImplemented = errors.New("RPC call is not implemented")
+
+	// ErrDeprecated throws an error if this RPC call is deprecated.
+	ErrDeprecated = errors.New("RPC call has been deprecated")
 )
 
-// Transport ...
+// Transport provides interface to server transport.
 type Transport interface {
 	SendMessage([]byte) error
 	Responses() <-chan []byte
 	Errors() <-chan error
 }
 
-// TCPTransport ...
+// TCPTransport store informations about the TCP transport.
 type TCPTransport struct {
 	conn      net.Conn
 	responses chan []byte
 	errors    chan error
 }
 
-// NewTCPTransport ...
+// NewTCPTransport opens a new TCP connection to the remote server.
 func NewTCPTransport(addr string) (*TCPTransport, error) {
 	conn, err := net.DialTimeout("tcp", addr, connTimeout)
 	if err != nil {
@@ -73,7 +77,7 @@ func NewTCPTransport(addr string) (*TCPTransport, error) {
 	return tcp, nil
 }
 
-// NewSSLTransport ...
+// NewSSLTransport opens a new SSL connection to the remote server.
 func NewSSLTransport(addr string, config *tls.Config) (*TCPTransport, error) {
 	dialer := net.Dialer{
 		Timeout: connTimeout,
@@ -112,7 +116,7 @@ func (t *TCPTransport) listen() {
 	}
 }
 
-// SendMessage ...
+// SendMessage sends a message to the remote server through the TCP transport.
 func (t *TCPTransport) SendMessage(body []byte) error {
 	if DebugMode {
 		log.Printf("%s [debug] %s <- %s", time.Now().Format("2006-01-02 15:04:05"), t.conn.RemoteAddr(), body)
@@ -122,12 +126,12 @@ func (t *TCPTransport) SendMessage(body []byte) error {
 	return err
 }
 
-// Responses ...
+// Responses returns chan to TCP transport responses.
 func (t *TCPTransport) Responses() <-chan []byte {
 	return t.responses
 }
 
-// Errors ...
+// Errors returns chan to TCP transport errors.
 func (t *TCPTransport) Errors() <-chan error {
 	return t.errors
 }
@@ -137,7 +141,7 @@ type container struct {
 	err     error
 }
 
-// Server ...
+// Server stores information about the remote server.
 type Server struct {
 	transport Transport
 
@@ -153,7 +157,7 @@ type Server struct {
 	nextID uint64
 }
 
-// NewServer ...
+// NewServer initialize a new remote server.
 func NewServer() *Server {
 	s := &Server{
 		handlers:     make(map[uint64]chan *container),
@@ -166,7 +170,7 @@ func NewServer() *Server {
 	return s
 }
 
-// ConnectTCP ...
+// ConnectTCP connects to the remote server using TCP.
 func (s *Server) ConnectTCP(addr string) error {
 	if s.transport != nil {
 		return ErrServerConnected
@@ -183,7 +187,7 @@ func (s *Server) ConnectTCP(addr string) error {
 	return nil
 }
 
-// ConnectSSL ...
+// ConnectSSL connects to the remote server using SSL.
 func (s *Server) ConnectSSL(addr string, config *tls.Config) error {
 	if s.transport != nil {
 		return ErrServerConnected
