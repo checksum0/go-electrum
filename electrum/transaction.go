@@ -62,13 +62,13 @@ type ScriptPubkey struct {
 
 // TransactionGet gets the detailed information for a transaction.
 // https://electrumx.readthedocs.io/en/latest/protocol-methods.html#blockchain-transaction-get
-func (s *Server) TransactionGet(txHash string) (TransactionResp, error) {
+func (s *Server) TransactionGet(txHash string) (*TransactionResp, error) {
 	resp := &struct {
-		Result TransactionResp `json:"result"`
+		Result *TransactionResp `json:"result"`
 	}{}
 	err := s.request("blockchain.transaction.get", []interface{}{txHash, true}, resp)
 	if err != nil {
-		return TransactionResp{}, err
+		return &TransactionResp{}, err
 	}
 
 	return resp.Result, nil
@@ -95,13 +95,13 @@ type MerkleResp struct {
 
 // TransactionGetMerkle returns the merkle proof for a confirmed transaction.
 // https://electrumx.readthedocs.io/en/latest/protocol-methods.html#blockchain-transaction-get-merkle
-func (s *Server) TransactionGetMerkle(txHash string, height uint32) (MerkleResp, error) {
+func (s *Server) TransactionGetMerkle(txHash string, height uint32) (*MerkleResp, error) {
 	resp := &struct {
-		Result MerkleResp `json:"result"`
+		Result *MerkleResp `json:"result"`
 	}{}
 	err := s.request("blockchain.transaction.get_merkle", []interface{}{txHash, height}, resp)
 	if err != nil {
-		return MerkleResp{}, err
+		return &MerkleResp{}, err
 	}
 
 	return resp.Result, err
@@ -127,13 +127,13 @@ type MerkleFromPosResp struct {
 
 // TransactionMerkleFromPosition returns the merkle proof for a specific position in a block.
 // https://electrumx.readthedocs.io/en/latest/protocol-methods.html#blockchain-transaction-id-from-pos
-func (s *Server) TransactionMerkleFromPosition(height, position uint32) (MerkleFromPosResp, error) {
+func (s *Server) TransactionMerkleFromPosition(height, position uint32) (*MerkleFromPosResp, error) {
 	resp := struct {
-		Result MerkleFromPosResp `json:"result"`
+		Result *MerkleFromPosResp `json:"result"`
 	}{}
 	err := s.request("blockchain.transaction.id_from_pos", []interface{}{height, position, true}, resp)
 	if err != nil {
-		return MerkleFromPosResp{}, err
+		return &MerkleFromPosResp{}, err
 	}
 
 	return resp.Result, err
