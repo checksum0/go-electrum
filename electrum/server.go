@@ -12,7 +12,7 @@ func (s *Server) Ping() error {
 // ServerAddPeer adds your new server into the remote server own peers list.
 // This should not be used if you are a client.
 // https://electrumx.readthedocs.io/en/latest/protocol-methods.html#server-add-peer
-func (s *Server) ServerAddPeer(features *featuresResp) error {
+func (s *Server) ServerAddPeer(features *FeaturesResp) error {
 	resp := &basicResp{}
 	err := s.request("server.add_peer", []interface{}{features}, resp)
 
@@ -42,7 +42,9 @@ type host struct {
 	SSLPort uint16 `json:"ssl_port,omitempty"`
 }
 
-type featuresResp struct {
+// FeatureResp represent the data sent or receive in RPC call "server.features" and
+// "server.add_peer".
+type FeaturesResp struct {
 	GenesisHash   string          `json:"genesis_hash"`
 	Hosts         map[string]host `json:"hosts"`
 	ProtocolMax   string          `json:"protocol_max"`
@@ -54,13 +56,13 @@ type featuresResp struct {
 
 // ServerFeatures returns a list of features and services supported by the remote server.
 // https://electrumx.readthedocs.io/en/latest/protocol-methods.html#server-features
-func (s *Server) ServerFeatures() (interface{}, error) {
+func (s *Server) ServerFeatures() (*FeaturesResp, error) {
 	resp := &struct {
-		Result *featuresResp `json:"result"`
+		Result *FeaturesResp `json:"result"`
 	}{}
 	err := s.request("server.features", []interface{}{}, resp)
 
-	return &resp.Result, err
+	return resp.Result, err
 }
 
 // ServerPeers returns a list of peers this remote server is aware of.
