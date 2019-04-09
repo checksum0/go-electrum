@@ -50,17 +50,17 @@ func (s *Server) ServerFeatures() (interface{}, error) {
 	}{}
 	err := s.request("server.features", []interface{}{}, resp)
 
-	return &resp, err
+	return &resp.Result, err
 }
 
 // ServerPeers ...
 func (s *Server) ServerPeers() (interface{}, error) {
 	resp := &struct {
-		Peers [][]interface{} `json:"result"`
+		Result [][]interface{} `json:"result"`
 	}{}
 	err := s.request("server.peers.subscribe", []interface{}{}, resp)
 
-	return resp.Peers, err
+	return resp.Result, err
 }
 
 // ServerVersion ...
