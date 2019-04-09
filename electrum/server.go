@@ -66,15 +66,15 @@ func (s *Server) ServerPeers() (interface{}, error) {
 // ServerVersion ...
 func (s *Server) ServerVersion() (serverVer, protocolVer string, err error) {
 	resp := &struct {
-		Versions []string `json:"result"`
+		Result []string `json:"result"`
 	}{}
 	err = s.request("server.version", []interface{}{ClientVersion, ProtocolVersion}, resp)
 	if err != nil {
 		serverVer = ""
 		protocolVer = ""
 	} else {
-		serverVer = resp.Versions[0]
-		protocolVer = resp.Versions[1]
+		serverVer = resp.Result[0]
+		protocolVer = resp.Result[1]
 	}
 
 	return
