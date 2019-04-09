@@ -3,18 +3,19 @@ package electrum
 import "errors"
 
 var (
-	// ErrCheckpointHeight ...
+	// ErrCheckpointHeight is thrown if the checkpoint height is smaller than the block height.
 	ErrCheckpointHeight = errors.New("checkpoint height must be greater or equal than block height")
 )
 
-// BlockHeaderResp ...
+// BlockHeaderResp represents the response to BlockHeader().
 type BlockHeaderResp struct {
 	Branch []string `json:"branch"`
 	Header string   `json:"header"`
 	Root   string   `json:"root"`
 }
 
-// BlockHeader ...
+// BlockHeader returns the block header at a specific height.
+// https://electrumx.readthedocs.io/en/latest/protocol-methods.html#blockchain-block-header
 func (s *Server) BlockHeader(height uint32, checkpointHeight ...uint32) (*BlockHeaderResp, error) {
 	if checkpointHeight != nil {
 		if height > checkpointHeight[0] {
@@ -44,7 +45,7 @@ func (s *Server) BlockHeader(height uint32, checkpointHeight ...uint32) (*BlockH
 	return result, err
 }
 
-// BlockHeadersResp ...
+// BlockHeadersResp represents the response to BlockHeaders().
 type BlockHeadersResp struct {
 	Count   uint32   `json:"count"`
 	Headers string   `json:"hex"`
@@ -53,7 +54,8 @@ type BlockHeadersResp struct {
 	Root    string   `json:"root,omitempty"`
 }
 
-// BlockHeaders ...
+// BlockHeaders return a concatenated chunk of block headers.
+// https://electrumx.readthedocs.io/en/latest/protocol-methods.html#blockchain-block-headers
 func (s *Server) BlockHeaders(startHeight, count uint32, checkpointHeight ...uint32) (*BlockHeadersResp, error) {
 	resp := &struct {
 		Result *BlockHeadersResp `json:"result"`

@@ -7,13 +7,15 @@ import "encoding/json"
  * - masternode.subscribe
  */
 
-// SubscribeHeadersResp ...
+// SubscribeHeadersResp represent the response to SubscribeHeaders().
 type SubscribeHeadersResp struct {
 	Height int32  `json:"height"`
 	Hex    string `json:"hex"`
 }
 
-// SubscribeHeaders ...
+// SubscribeHeaders subscribe to receive block headers notifications
+// when new blocks are found.
+// https://electrumx.readthedocs.io/en/latest/protocol-methods.html#blockchain-headers-subscribe
 func (s *Server) SubscribeHeaders() (<-chan *SubscribeHeadersResp, error) {
 	resp := &struct {
 		Result *SubscribeHeadersResp `json:"result"`
