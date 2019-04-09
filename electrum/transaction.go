@@ -1,6 +1,8 @@
 package electrum
 
-// TransactionBroadcast ...
+// TransactionBroadcast sends a raw transaction to the remote server to
+// be broadcasted on the server network.
+// https://electrumx.readthedocs.io/en/latest/protocol-methods.html#blockchain-transaction-broadcast
 func (s *Server) TransactionBroadcast(rawTx string) (string, error) {
 	resp := &basicResp{}
 	err := s.request("blockchain.transaction.broadcast", []interface{}{rawTx}, resp)
@@ -11,7 +13,7 @@ func (s *Server) TransactionBroadcast(rawTx string) (string, error) {
 	return resp.Result, nil
 }
 
-// TransactionResp ...
+// TransactionResp represents the response to TransactionGet().
 type TransactionResp struct {
 	Blockhash     string     `json:"blockhash"`
 	Blocktime     uint64     `json:"blocktime"`
@@ -27,7 +29,7 @@ type TransactionResp struct {
 	Merkle        MerkleResp `json:"merkle,omitempty"` // For protocol v1.5 and up.
 }
 
-// Vin ...
+// Vin represents the input side of a transaction.
 type Vin struct {
 	Coinbase  string     `json:"coinbase"`
 	ScriptSig *ScriptSig `json:"scriptsig"`
@@ -36,20 +38,20 @@ type Vin struct {
 	Vout      uint32     `json:"vout"`
 }
 
-// ScriptSig ...
+// ScriptSig represents the signature script for that transaction input.
 type ScriptSig struct {
 	Asm string `json:"asm"`
 	Hex string `json:"hex"`
 }
 
-// Vout ...
+// Vout represents the output side of a transaction.
 type Vout struct {
 	N            uint32       `json:"n"`
 	ScriptPubkey ScriptPubkey `json:"scriptpubkey"`
 	Value        float64      `json:"value"`
 }
 
-// ScriptPubkey ...
+// ScriptPubkey represents the script of that transaction output.
 type ScriptPubkey struct {
 	Addresses []string `json:"addresses,omitempty"`
 	Asm       string   `json:"asm"`
@@ -58,7 +60,8 @@ type ScriptPubkey struct {
 	Type      string   `json:"type"`
 }
 
-// TransactionGet ...
+// TransactionGet gets the detailed information for a transaction.
+// https://electrumx.readthedocs.io/en/latest/protocol-methods.html#blockchain-transaction-get
 func (s *Server) TransactionGet(txHash string) (TransactionResp, error) {
 	resp := &struct {
 		Result TransactionResp `json:"result"`
@@ -71,7 +74,8 @@ func (s *Server) TransactionGet(txHash string) (TransactionResp, error) {
 	return resp.Result, nil
 }
 
-// TransactionGetRaw ...
+// TransactionGetRaw gets a raw encoded transaction.
+// https://electrumx.readthedocs.io/en/latest/protocol-methods.html#blockchain-transaction-get
 func (s *Server) TransactionGetRaw(txHash string) (string, error) {
 	resp := &basicResp{}
 	err := s.request("blockchain.transaction.get", []interface{}{txHash, false}, resp)
@@ -82,14 +86,15 @@ func (s *Server) TransactionGetRaw(txHash string) (string, error) {
 	return resp.Result, nil
 }
 
-// MerkleResp ...
+// MerkleResp represents the response TransactionGetMerkle().
 type MerkleResp struct {
 	Merkle   []string `json:"merkle"`
 	Height   uint32   `json:"block_height"`
 	Position uint32   `json:"pos"`
 }
 
-// TransactionGetMerkle ...
+// TransactionGetMerkle returns the merkle proof for a confirmed transaction.
+// https://electrumx.readthedocs.io/en/latest/protocol-methods.html#blockchain-transaction-get-merkle
 func (s *Server) TransactionGetMerkle(txHash string, height uint32) (MerkleResp, error) {
 	resp := &struct {
 		Result MerkleResp `json:"result"`
@@ -102,7 +107,8 @@ func (s *Server) TransactionGetMerkle(txHash string, height uint32) (MerkleResp,
 	return resp.Result, err
 }
 
-// TransactionHashFromPosition ...
+// TransactionHashFromPosition returns the transaction hash for a specific position in a block.
+// https://electrumx.readthedocs.io/en/latest/protocol-methods.html#blockchain-transaction-id-from-pos
 func (s *Server) TransactionHashFromPosition(height, position uint32) (string, error) {
 	resp := &basicResp{}
 	err := s.request("blockchain.transaction.id_from_pos", []interface{}{height, position, false}, resp)
@@ -113,13 +119,14 @@ func (s *Server) TransactionHashFromPosition(height, position uint32) (string, e
 	return resp.Result, err
 }
 
-// MerkleFromPosResp ...
+// MerkleFromPosResp represents the response to TransactionMerkleFromPosition().
 type MerkleFromPosResp struct {
 	Hash   string   `json:"tx_hash"`
 	Merkle []string `json:"merkle"`
 }
 
-// TransactionMerkleFromPosition ...
+// TransactionMerkleFromPosition returns the merkle proof for a specific position in a block.
+// https://electrumx.readthedocs.io/en/latest/protocol-methods.html#blockchain-transaction-id-from-pos
 func (s *Server) TransactionMerkleFromPosition(height, position uint32) (MerkleFromPosResp, error) {
 	resp := struct {
 		Result MerkleFromPosResp `json:"result"`
