@@ -8,8 +8,11 @@ func (s *Server) Ping() error {
 }
 
 // ServerAddPeer ...
-func (s *Server) ServerAddPeer() error {
-	return ErrNotImplemented
+func (s *Server) ServerAddPeer(features *featuresResp) error {
+	resp := &basicResp{}
+	err := s.request("server.add_peer", []interface{}{features}, resp)
+
+	return err
 }
 
 // ServerBanner ...
