@@ -1,12 +1,5 @@
 package electrum
 
-/* TODO:
- * - masternode.announce.broadcast
- * - masternode.list
- * - protx.diff
- * - protx.info
- */
-
 type basicResp struct {
 	Result string `json:"result"`
 }
