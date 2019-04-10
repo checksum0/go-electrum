@@ -25,7 +25,7 @@ func (s *Server) GetBlockHeader(height uint32, checkpointHeight ...uint32) (*Blo
 		resp := &struct {
 			Result *BlockHeaderResp `json:"result"`
 		}{}
-		err := s.request("blockchain.block.header", []interface{}{height, checkpointHeight}, resp)
+		err := s.request("blockchain.block.header", []interface{}{height, checkpointHeight[0]}, resp)
 
 		return resp.Result, err
 	}
@@ -65,7 +65,7 @@ func (s *Server) GetBlockHeaders(startHeight, count uint32, checkpointHeight ...
 		if (startHeight + (count - 1)) > checkpointHeight[0] {
 			return nil, ErrCheckpointHeight
 		}
-		err := s.request("blockchain.block.headers", []interface{}{startHeight, count, checkpointHeight}, resp)
+		err := s.request("blockchain.block.headers", []interface{}{startHeight, count, checkpointHeight[0]}, resp)
 		if err != nil {
 			return nil, err
 		}
@@ -73,7 +73,7 @@ func (s *Server) GetBlockHeaders(startHeight, count uint32, checkpointHeight ...
 		return resp.Result, err
 	}
 
-	err := s.request("blockchain.block.headers", []interface{}{startHeight, count, checkpointHeight}, resp)
+	err := s.request("blockchain.block.headers", []interface{}{startHeight, count}, resp)
 	if err != nil {
 		return nil, err
 	}
