@@ -66,7 +66,7 @@ type GetBlockHeadersResult struct {
 // https://electrumx.readthedocs.io/en/latest/protocol-methods.html#blockchain-block-headers
 func (s *Server) GetBlockHeaders(startHeight, count uint32,
 	checkpointHeight ...uint32) (*GetBlockHeadersResult, error) {
-		
+
 	var resp GetBlockHeadersResp
 	var err error
 
