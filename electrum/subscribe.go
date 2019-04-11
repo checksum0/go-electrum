@@ -4,23 +4,31 @@ import "encoding/json"
 
 // SubscribeHeadersResp represent the response to SubscribeHeaders().
 type SubscribeHeadersResp struct {
+	Result *SubscribeHeadersResult `json:"result"`
+}
+
+// SubscribeHeadersNotif represent the notification to SubscribeHeaders().
+type SubscribeHeadersNotif struct {
+	Params []*SubscribeHeadersResult `json:"params"`
+}
+
+// SubscribeHeadersResult rrepresents the content of the result field in the response to SubscribeHeaders().
+type SubscribeHeadersResult struct {
 	Height int32  `json:"height"`
 	Hex    string `json:"hex"`
 }
 
 // SubscribeHeaders subscribes to receive block headers notifications when new blocks are found.
 // https://electrumx.readthedocs.io/en/latest/protocol-methods.html#blockchain-headers-subscribe
-func (s *Server) SubscribeHeaders() (<-chan *SubscribeHeadersResp, error) {
-	resp := &struct {
-		Result *SubscribeHeadersResp `json:"result"`
-	}{}
+func (s *Server) SubscribeHeaders() (<-chan *SubscribeHeadersResult, error) {
+	var resp SubscribeHeadersResp
 
 	err := s.request("blockchain.headers.subscribe", []interface{}{}, resp)
 	if err != nil {
 		return nil, err
 	}
 
-	respChan := make(chan *SubscribeHeadersResp, 1)
+	respChan := make(chan *SubscribeHeadersResult, 1)
 	respChan <- resp.Result
 
 	go func() {
@@ -29,9 +37,7 @@ func (s *Server) SubscribeHeaders() (<-chan *SubscribeHeadersResp, error) {
 				return
 			}
 
-			resp := &struct {
-				Params []*SubscribeHeadersResp `json:"params"`
-			}{}
+			var resp SubscribeHeadersNotif
 
 			err := json.Unmarshal(msg.content, resp)
 			if err != nil {
@@ -47,11 +53,17 @@ func (s *Server) SubscribeHeaders() (<-chan *SubscribeHeadersResp, error) {
 	return respChan, nil
 }
 
+// SubscribeNotif represent the notification to SubscribeScripthash() and SubscribeMasternode().
+type SubscribeNotif struct {
+	Params [2]string `json:"params"`
+}
+
 // SubscribeScripthash subscribes to receive notifications when new transactions are received
 // for that scripthash.
 // https://electrumx.readthedocs.io/en/latest/protocol-methods.html#blockchain-headers-subscribe
 func (s *Server) SubscribeScripthash(scripthash string) (<-chan string, error) {
-	resp := &basicResp{}
+	var resp basicResp
+
 	err := s.request("blockchain.scripthash.subscribe", []interface{}{scripthash}, resp)
 	if err != nil {
 		return nil, err
@@ -68,9 +80,7 @@ func (s *Server) SubscribeScripthash(scripthash string) (<-chan string, error) {
 				return
 			}
 
-			resp := &struct {
-				Params []string `json:"params"`
-			}{}
+			var resp SubscribeNotif
 
 			err := json.Unmarshal(msg.content, resp)
 			if err != nil {
@@ -89,7 +99,8 @@ func (s *Server) SubscribeScripthash(scripthash string) (<-chan string, error) {
 // SubscribeMasternode subscribes to receive notifications when a masternode status changes.
 // https://electrumx.readthedocs.io/en/latest/protocol-methods.html#blockchain-headers-subscribe
 func (s *Server) SubscribeMasternode(collateral string) (<-chan string, error) {
-	resp := &basicResp{}
+	var resp basicResp
+
 	err := s.request("blockchain.masternode.subscribe", []interface{}{collateral}, resp)
 	if err != nil {
 		return nil, err
@@ -106,9 +117,7 @@ func (s *Server) SubscribeMasternode(collateral string) (<-chan string, error) {
 				return
 			}
 
-			resp := &struct {
-				Params []string `json:"params"`
-			}{}
+			var resp SubscribeNotif
 
 			err := json.Unmarshal(msg.content, resp)
 			if err != nil {
