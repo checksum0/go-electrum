@@ -15,7 +15,7 @@ func (s *Server) Ping() error {
 func (s *Server) ServerAddPeer(features *ServerFeaturesResult) error {
 	var resp basicResp
 
-	err := s.request("server.add_peer", []interface{}{features}, resp)
+	err := s.request("server.add_peer", []interface{}{features}, &resp)
 
 	return err
 }
@@ -25,7 +25,7 @@ func (s *Server) ServerAddPeer(features *ServerFeaturesResult) error {
 func (s *Server) ServerBanner() (string, error) {
 	var resp basicResp
 
-	err := s.request("server.banner", []interface{}{}, resp)
+	err := s.request("server.banner", []interface{}{}, &resp)
 
 	return resp.Result, err
 }
@@ -35,7 +35,7 @@ func (s *Server) ServerBanner() (string, error) {
 func (s *Server) ServerDonation() (string, error) {
 	var resp basicResp
 
-	err := s.request("server.donation_address", []interface{}{}, resp)
+	err := s.request("server.donation_address", []interface{}{}, &resp)
 
 	return resp.Result, err
 }
@@ -67,7 +67,7 @@ type ServerFeaturesResult struct {
 func (s *Server) ServerFeatures() (*ServerFeaturesResult, error) {
 	var resp ServerFeaturesResp
 
-	err := s.request("server.features", []interface{}{}, resp)
+	err := s.request("server.features", []interface{}{}, &resp)
 
 	return resp.Result, err
 }
@@ -78,7 +78,7 @@ func (s *Server) ServerPeers() (interface{}, error) {
 	resp := &struct {
 		Result [][]interface{} `json:"result"`
 	}{}
-	err := s.request("server.peers.subscribe", []interface{}{}, resp)
+	err := s.request("server.peers.subscribe", []interface{}{}, &resp)
 
 	return resp.Result, err
 }
@@ -94,7 +94,7 @@ type ServerVersionResp struct {
 func (s *Server) ServerVersion() (serverVer, protocolVer string, err error) {
 	var resp ServerVersionResp
 
-	err = s.request("server.version", []interface{}{ClientVersion, ProtocolVersion}, resp)
+	err = s.request("server.version", []interface{}{ClientVersion, ProtocolVersion}, &resp)
 	if err != nil {
 		serverVer = ""
 		protocolVer = ""

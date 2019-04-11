@@ -15,7 +15,7 @@ type GetFeeResp struct {
 func (s *Server) GetFee(target uint32) (float32, error) {
 	var resp GetFeeResp
 
-	err := s.request("blockchain.estimatefee", []interface{}{target}, resp)
+	err := s.request("blockchain.estimatefee", []interface{}{target}, &resp)
 	if err != nil {
 		return -1, err
 	}
@@ -29,7 +29,7 @@ func (s *Server) GetFee(target uint32) (float32, error) {
 func (s *Server) GetRelayFee() (float32, error) {
 	var resp GetFeeResp
 
-	err := s.request("blockchain.relayfee", []interface{}{}, resp)
+	err := s.request("blockchain.relayfee", []interface{}{}, &resp)
 	if err != nil {
 		return -1, err
 	}
@@ -39,7 +39,7 @@ func (s *Server) GetRelayFee() (float32, error) {
 
 // GetFeeHistogramResp represents the response to GetFee().
 type GetFeeHistogramResp struct {
-	Result map[uint32]uint64 `json:"result"`
+	Result map[uint32]uint64 `json:"result,omitempty"`
 }
 
 // GetFeeHistogram returns a histogram of the fee rates paid by transactions in the

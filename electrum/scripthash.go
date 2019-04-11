@@ -16,7 +16,7 @@ type GetBalanceResult struct {
 func (s *Server) GetBalance(scripthash string) (GetBalanceResult, error) {
 	var resp GetBalanceResp
 
-	err := s.request("blockchain.scripthash.get_balance", []interface{}{scripthash}, resp)
+	err := s.request("blockchain.scripthash.get_balance", []interface{}{scripthash}, &resp)
 	if err != nil {
 		return GetBalanceResult{}, err
 	}
@@ -41,7 +41,7 @@ type GetMempoolResult struct {
 func (s *Server) GetHistory(scripthash string) ([]*GetMempoolResult, error) {
 	var resp GetMempoolResp
 
-	err := s.request("blockchain.scripthash.get_history", []interface{}{scripthash}, resp)
+	err := s.request("blockchain.scripthash.get_history", []interface{}{scripthash}, &resp)
 	if err != nil {
 		return nil, err
 	}
@@ -53,7 +53,7 @@ func (s *Server) GetHistory(scripthash string) ([]*GetMempoolResult, error) {
 func (s *Server) GetMempool(scripthash string) ([]*GetMempoolResult, error) {
 	var resp GetMempoolResp
 
-	err := s.request("blockchain.scripthash.get_mempool", []interface{}{scripthash}, resp)
+	err := s.request("blockchain.scripthash.get_mempool", []interface{}{scripthash}, &resp)
 	if err != nil {
 		return nil, err
 	}
@@ -61,8 +61,13 @@ func (s *Server) GetMempool(scripthash string) ([]*GetMempoolResult, error) {
 	return resp.Result, err
 }
 
-// UnspentResp represents the response to ListUnspent()
-type UnspentResp struct {
+// ListUnspentResp represents the response to ListUnspent()
+type ListUnspentResp struct {
+	Result []*ListUnspentResult `json:"result"`
+}
+
+// ListUnspentResult represents the content of the result field in the response to ListUnspent()
+type ListUnspentResult struct {
 	Height   uint32 `json:"height"`
 	Position uint32 `json:"tx_pos"`
 	Hash     string `json:"tx_hash"`
@@ -70,11 +75,10 @@ type UnspentResp struct {
 }
 
 // ListUnspent returns an ordered list of UTXOs for a scripthash.
-func (s *Server) ListUnspent(scripthash string) ([]*UnspentResp, error) {
-	resp := &struct {
-		Result []*UnspentResp `json:"result"`
-	}{}
-	err := s.request("blockchain.scripthash.listunspent", []interface{}{scripthash}, resp)
+func (s *Server) ListUnspent(scripthash string) ([]*ListUnspentResult, error) {
+	var resp ListUnspentResp
+
+	err := s.request("blockchain.scripthash.listunspent", []interface{}{scripthash}, &resp)
 	if err != nil {
 		return nil, err
 	}

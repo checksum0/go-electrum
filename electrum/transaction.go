@@ -5,7 +5,7 @@ package electrum
 // https://electrumx.readthedocs.io/en/latest/protocol-methods.html#blockchain-transaction-broadcast
 func (s *Server) BroadcastTransaction(rawTx string) (string, error) {
 	resp := &basicResp{}
-	err := s.request("blockchain.transaction.broadcast", []interface{}{rawTx}, resp)
+	err := s.request("blockchain.transaction.broadcast", []interface{}{rawTx}, &resp)
 	if err != nil {
 		return "", err
 	}
@@ -70,7 +70,7 @@ type ScriptPubkey struct {
 func (s *Server) GetTransaction(txHash string) (*GetTransactionResult, error) {
 	var resp GetTransactionResp
 
-	err := s.request("blockchain.transaction.get", []interface{}{txHash, true}, resp)
+	err := s.request("blockchain.transaction.get", []interface{}{txHash, true}, &resp)
 	if err != nil {
 		return nil, err
 	}
@@ -83,7 +83,7 @@ func (s *Server) GetTransaction(txHash string) (*GetTransactionResult, error) {
 func (s *Server) GetRawTransaction(txHash string) (string, error) {
 	var resp basicResp
 
-	err := s.request("blockchain.transaction.get", []interface{}{txHash, false}, resp)
+	err := s.request("blockchain.transaction.get", []interface{}{txHash, false}, &resp)
 	if err != nil {
 		return "", err
 	}
@@ -108,7 +108,7 @@ type GetMerkleProofResult struct {
 func (s *Server) GetMerkleProof(txHash string, height uint32) (*GetMerkleProofResult, error) {
 	var resp GetMerkleProofResp
 
-	err := s.request("blockchain.transaction.get_merkle", []interface{}{txHash, height}, resp)
+	err := s.request("blockchain.transaction.get_merkle", []interface{}{txHash, height}, &resp)
 	if err != nil {
 		return nil, err
 	}
@@ -121,7 +121,7 @@ func (s *Server) GetMerkleProof(txHash string, height uint32) (*GetMerkleProofRe
 func (s *Server) GetHashFromPosition(height, position uint32) (string, error) {
 	var resp basicResp
 
-	err := s.request("blockchain.transaction.id_from_pos", []interface{}{height, position, false}, resp)
+	err := s.request("blockchain.transaction.id_from_pos", []interface{}{height, position, false}, &resp)
 	if err != nil {
 		return "", err
 	}
@@ -146,7 +146,7 @@ type GetMerkleProofFromPosResult struct {
 func (s *Server) GetMerkleProofFromPosition(height, position uint32) (*GetMerkleProofFromPosResult, error) {
 	var resp GetMerkleProofFromPosResp
 
-	err := s.request("blockchain.transaction.id_from_pos", []interface{}{height, position, true}, resp)
+	err := s.request("blockchain.transaction.id_from_pos", []interface{}{height, position, true}, &resp)
 	if err != nil {
 		return nil, err
 	}

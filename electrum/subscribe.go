@@ -14,7 +14,7 @@ type SubscribeHeadersNotif struct {
 
 // SubscribeHeadersResult rrepresents the content of the result field in the response to SubscribeHeaders().
 type SubscribeHeadersResult struct {
-	Height int32  `json:"height"`
+	Height int32  `json:"height,omitempty"`
 	Hex    string `json:"hex"`
 }
 
@@ -23,7 +23,7 @@ type SubscribeHeadersResult struct {
 func (s *Server) SubscribeHeaders() (<-chan *SubscribeHeadersResult, error) {
 	var resp SubscribeHeadersResp
 
-	err := s.request("blockchain.headers.subscribe", []interface{}{}, resp)
+	err := s.request("blockchain.headers.subscribe", []interface{}{}, &resp)
 	if err != nil {
 		return nil, err
 	}
@@ -64,7 +64,7 @@ type SubscribeNotif struct {
 func (s *Server) SubscribeScripthash(scripthash string) (<-chan string, error) {
 	var resp basicResp
 
-	err := s.request("blockchain.scripthash.subscribe", []interface{}{scripthash}, resp)
+	err := s.request("blockchain.scripthash.subscribe", []interface{}{scripthash}, &resp)
 	if err != nil {
 		return nil, err
 	}
@@ -101,7 +101,7 @@ func (s *Server) SubscribeScripthash(scripthash string) (<-chan string, error) {
 func (s *Server) SubscribeMasternode(collateral string) (<-chan string, error) {
 	var resp basicResp
 
-	err := s.request("blockchain.masternode.subscribe", []interface{}{collateral}, resp)
+	err := s.request("blockchain.masternode.subscribe", []interface{}{collateral}, &resp)
 	if err != nil {
 		return nil, err
 	}
