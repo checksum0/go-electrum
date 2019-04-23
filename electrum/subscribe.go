@@ -94,12 +94,14 @@ func (s *Server) SubscribeScripthash() (*ScripthashSubscription, <-chan *Subscri
 				return
 			}
 
+			sub.lock.Lock()
 			for _, a := range sub.subscribedSH {
 				if a == resp.Params[0] {
 					sub.notifChan <- &resp
 					break
 				}
 			}
+			sub.lock.Unlock()
 		}
 	}()
 
