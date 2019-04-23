@@ -59,6 +59,7 @@ func (s *Server) SubscribeHeaders() (<-chan *SubscribeHeadersResult, error) {
 
 // ScripthashSubscription ...
 type ScripthashSubscription struct {
+	server    *Server
 	notifChan chan *SubscribeNotif
 
 	subscribedSH  []string
@@ -72,9 +73,10 @@ type SubscribeNotif struct {
 	Params [2]string `json:"params"`
 }
 
-// SubscribeScripthash
-func SubscribeScripthash() (*ScripthashSubscription, <-chan *SubscribeNotif) {
+// SubscribeScripthash ...
+func (s *Server) SubscribeScripthash() (*ScripthashSubscription, <-chan *SubscribeNotif) {
 	sub := &ScripthashSubscription{
+		server:        s,
 		notifChan:     make(chan *SubscribeNotif, 1),
 		scripthashMap: make(map[string]string),
 	}
@@ -101,14 +103,14 @@ func SubscribeScripthash() (*ScripthashSubscription, <-chan *SubscribeNotif) {
 		}
 	}()
 
-	return sub, notifChan
+	return sub, sub.notifChan
 }
 
 // Add ...
 func (sub *ScripthashSubscription) Add(scripthash string, address ...string) error {
 	var resp basicResp
 
-	err := s.request("blockchain.scripthash.subscribe", []interface{}{scripthash}, &resp)
+	err := sub.server.request("blockchain.scripthash.subscribe", []interface{}{scripthash}, &resp)
 	if err != nil {
 		return err
 	}
@@ -119,8 +121,8 @@ func (sub *ScripthashSubscription) Add(scripthash string, address ...string) err
 
 	sub.lock.Lock()
 	sub.subscribedSH = append(sub.subscribedSH[:], scripthash)
-	if address {
-		sub.scripthashMap[scripthash] = address
+	if len(address) > 0 {
+		sub.scripthashMap[scripthash] = address[0]
 	}
 	sub.lock.Unlock()
 
@@ -139,10 +141,13 @@ func (sub *ScripthashSubscription) GetAddress(scripthash string) (string, error)
 
 // GetScripthash ...
 func (sub *ScripthashSubscription) GetScripthash(address string) (string, error) {
+	var found bool
+	var scripthash string
+
 	for k, v := range sub.scripthashMap {
 		if v == address {
-			scripthash := key
-			found := true
+			scripthash = k
+			found = true
 		}
 	}
 
@@ -174,7 +179,7 @@ func (sub *ScripthashSubscription) Remove(scripthash string) error {
 
 // RemoveAddress ...
 func (sub *ScripthashSubscription) RemoveAddress(address string) error {
-	scripthash, err := GetScripthash(address)
+	scripthash, err := sub.GetScripthash(address)
 	if err != nil {
 		return err
 	}
@@ -195,7 +200,7 @@ func (sub *ScripthashSubscription) RemoveAddress(address string) error {
 // Resubscribe ...
 func (sub *ScripthashSubscription) Resubscribe() error {
 	for _, v := range sub.subscribedSH {
-		err := Add(v)
+		err := sub.Add(v)
 		if err != nil {
 			return err
 		}
