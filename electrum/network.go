@@ -224,7 +224,7 @@ func (s *Server) listen() {
 		select {
 		case err := <-s.transport.Errors():
 			s.Error <- err
-			s.shutdown()
+			s.Shutdown()
 		case bytes := <-s.transport.Responses():
 			result := &container{
 				content: bytes,
@@ -336,7 +336,7 @@ func (s *Server) request(method string, params []interface{}, v interface{}) err
 	return nil
 }
 
-func (s *Server) shutdown() {
+func (s *Server) Shutdown() {
 	close(s.quit)
 
 	s.transport = nil
