@@ -50,6 +50,7 @@ type Transport interface {
 	SendMessage([]byte) error
 	Responses() <-chan []byte
 	Errors() <-chan error
+	Close() error
 }
 
 // TCPTransport store informations about the TCP transport.
@@ -134,6 +135,10 @@ func (t *TCPTransport) Responses() <-chan []byte {
 // Errors returns chan to TCP transport errors.
 func (t *TCPTransport) Errors() <-chan error {
 	return t.errors
+}
+
+func (t *TCPTransport) Close() error {
+	return t.conn.Close()
 }
 
 type container struct {
@@ -338,7 +343,7 @@ func (s *Server) request(method string, params []interface{}, v interface{}) err
 
 func (s *Server) Shutdown() {
 	close(s.quit)
-
+	_ = s.transport.Close()
 	s.transport = nil
 	s.handlers = nil
 	s.pushHandlers = nil
