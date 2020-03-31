@@ -20,14 +20,18 @@ const (
 	// ProtocolVersion identifies the support protocol version to the remote server
 	ProtocolVersion = "1.4"
 
-	// TCP connection and server request timeout duration.
-	connTimeout = 30 * time.Second
-	nl          = byte('\n')
+	nl = byte('\n')
 )
 
 var (
 	// DebugMode provides debug output on communications with the remote server if enabled.
 	DebugMode bool
+
+	// Timeout for connecting to the server
+	ConnTimeout = time.Second * 30
+
+	// Timeout for requests
+	ReqTimeout = time.Second * 30
 
 	// ErrServerConnected throws an error if remote server is already connected.
 	ErrServerConnected = errors.New("server is already connected")
@@ -62,7 +66,7 @@ type TCPTransport struct {
 
 // NewTCPTransport opens a new TCP connection to the remote server.
 func NewTCPTransport(addr string) (*TCPTransport, error) {
-	conn, err := net.DialTimeout("tcp", addr, connTimeout)
+	conn, err := net.DialTimeout("tcp", addr, ConnTimeout)
 	if err != nil {
 		return nil, err
 	}
@@ -81,7 +85,7 @@ func NewTCPTransport(addr string) (*TCPTransport, error) {
 // NewSSLTransport opens a new SSL connection to the remote server.
 func NewSSLTransport(addr string, config *tls.Config) (*TCPTransport, error) {
 	dialer := net.Dialer{
-		Timeout: connTimeout,
+		Timeout: ConnTimeout,
 	}
 	conn, err := tls.DialWithDialer(&dialer, "tcp", addr, config)
 	if err != nil {
@@ -226,7 +230,12 @@ type response struct {
 
 func (s *Server) listen() {
 	for {
+		if s.transport == nil {
+			break
+		}
 		select {
+		case <-s.quit:
+			break
 		case err := <-s.transport.Errors():
 			s.Error <- err
 			s.Shutdown()
@@ -319,7 +328,7 @@ func (s *Server) request(method string, params []interface{}, v interface{}) err
 	var resp *container
 	select {
 	case resp = <-c:
-	case <-time.After(connTimeout):
+	case <-time.After(ReqTimeout):
 		return ErrTimeout
 	}
 
