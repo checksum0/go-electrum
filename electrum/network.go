@@ -152,7 +152,7 @@ type ServerOptions struct {
 // Server stores information about the remote server.
 type Server struct {
 	transport Transport
-	opts      ServerOptions
+	opts      *ServerOptions
 
 	handlers     map[uint64]chan *container
 	handlersLock sync.RWMutex
@@ -167,7 +167,7 @@ type Server struct {
 }
 
 // NewServer initialize a new remote server.
-func NewServer(opts ServerOptions) *Server {
+func NewServer(opts *ServerOptions) *Server {
 	s := &Server{
 		handlers:     make(map[uint64]chan *container),
 		pushHandlers: make(map[string][]chan *container),
