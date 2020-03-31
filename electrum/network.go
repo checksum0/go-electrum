@@ -354,7 +354,9 @@ func (s *Server) request(method string, params []interface{}, v interface{}) err
 }
 
 func (s *Server) Shutdown() {
-	close(s.quit)
+	if !s.IsShutdown() {
+		close(s.quit)
+	}
 	if s.transport != nil {
 		_ = s.transport.Close()
 	}
