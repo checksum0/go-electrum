@@ -354,8 +354,19 @@ func (s *Server) request(method string, params []interface{}, v interface{}) err
 
 func (s *Server) Shutdown() {
 	close(s.quit)
-	_ = s.transport.Close()
+	if s.transport != nil {
+		_ = s.transport.Close()
+	}
 	s.transport = nil
 	s.handlers = nil
 	s.pushHandlers = nil
+}
+
+func (s *Server) IsShutdown() bool {
+	select {
+	case <-s.quit:
+		return true
+	default:
+	}
+	return false
 }
