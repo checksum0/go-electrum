@@ -27,12 +27,6 @@ var (
 	// DebugMode provides debug output on communications with the remote server if enabled.
 	DebugMode bool
 
-	// Timeout for connecting to the server
-	ConnTimeout = time.Second * 30
-
-	// Timeout for requests
-	ReqTimeout = time.Second * 30
-
 	// ErrServerConnected throws an error if remote server is already connected.
 	ErrServerConnected = errors.New("server is already connected")
 
@@ -65,8 +59,8 @@ type TCPTransport struct {
 }
 
 // NewTCPTransport opens a new TCP connection to the remote server.
-func NewTCPTransport(addr string) (*TCPTransport, error) {
-	conn, err := net.DialTimeout("tcp", addr, ConnTimeout)
+func NewTCPTransport(addr string, timeout time.Duration) (*TCPTransport, error) {
+	conn, err := net.DialTimeout("tcp", addr, timeout)
 	if err != nil {
 		return nil, err
 	}
@@ -83,9 +77,9 @@ func NewTCPTransport(addr string) (*TCPTransport, error) {
 }
 
 // NewSSLTransport opens a new SSL connection to the remote server.
-func NewSSLTransport(addr string, config *tls.Config) (*TCPTransport, error) {
+func NewSSLTransport(addr string, config *tls.Config, timeout time.Duration) (*TCPTransport, error) {
 	dialer := net.Dialer{
-		Timeout: ConnTimeout,
+		Timeout: timeout,
 	}
 	conn, err := tls.DialWithDialer(&dialer, "tcp", addr, config)
 	if err != nil {
@@ -150,9 +144,15 @@ type container struct {
 	err     error
 }
 
+type ServerOptions struct {
+	ConnTimeout time.Duration
+	ReqTimeout  time.Duration
+}
+
 // Server stores information about the remote server.
 type Server struct {
 	transport Transport
+	opts      ServerOptions
 
 	handlers     map[uint64]chan *container
 	handlersLock sync.RWMutex
@@ -167,25 +167,27 @@ type Server struct {
 }
 
 // NewServer initialize a new remote server.
-func NewServer() *Server {
+func NewServer(opts ServerOptions) *Server {
 	s := &Server{
 		handlers:     make(map[uint64]chan *container),
 		pushHandlers: make(map[string][]chan *container),
 
 		Error: make(chan error),
 		quit:  make(chan struct{}),
+
+		opts: opts,
 	}
 
 	return s
 }
 
 // ConnectTCP connects to the remote server using TCP.
-func (s *Server) ConnectTCP(addr string) error {
+func (s *Server) ConnectTCP(addr string, ) error {
 	if s.transport != nil {
 		return ErrServerConnected
 	}
 
-	transport, err := NewTCPTransport(addr)
+	transport, err := NewTCPTransport(addr, s.opts.ConnTimeout)
 	if err != nil {
 		return err
 	}
@@ -202,7 +204,7 @@ func (s *Server) ConnectSSL(addr string, config *tls.Config) error {
 		return ErrServerConnected
 	}
 
-	transport, err := NewSSLTransport(addr, config)
+	transport, err := NewSSLTransport(addr, config, s.opts.ConnTimeout)
 	if err != nil {
 		return err
 	}
@@ -328,7 +330,7 @@ func (s *Server) request(method string, params []interface{}, v interface{}) err
 	var resp *container
 	select {
 	case resp = <-c:
-	case <-time.After(ReqTimeout):
+	case <-time.After(s.opts.ReqTimeout):
 		return ErrTimeout
 	}
 
