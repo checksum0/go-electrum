@@ -318,6 +318,7 @@ func (s *Server) request(method string, params []interface{}, v interface{}) err
 
 	err = s.transport.SendMessage(bytes)
 	if err != nil {
+		s.Shutdown()
 		return err
 	}
 
