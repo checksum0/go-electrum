@@ -182,7 +182,7 @@ func NewServer(opts *ServerOptions) *Server {
 }
 
 // ConnectTCP connects to the remote server using TCP.
-func (s *Server) ConnectTCP(addr string, ) error {
+func (s *Server) ConnectTCP(addr string) error {
 	if s.transport != nil {
 		return ErrServerConnected
 	}
