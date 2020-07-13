@@ -232,6 +232,9 @@ type response struct {
 
 func (s *Server) listen() {
 	for {
+		if s.IsShutdown() {
+			break
+		}
 		if s.transport == nil {
 			break
 		}
