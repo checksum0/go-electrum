@@ -8,7 +8,10 @@ import (
 )
 
 func main() {
-	server := electrum.NewServer()
+	server := electrum.NewServer(&electrum.ServerOptions{
+		ConnTimeout: time.Second * 10,
+		ReqTimeout:  time.Second * 10,
+	})
 	if err := server.ConnectTCP("bch.imaginary.cash:50001"); err != nil {
 		log.Fatal(err)
 	}
