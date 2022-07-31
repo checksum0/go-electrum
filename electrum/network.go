@@ -181,6 +181,7 @@ func (s *Client) listen() {
 			s.handlersLock.RUnlock()
 
 			if ok {
+				// TODO: very rare case. fix this memory leak, when nobody will read channel (in case of error)
 				c <- result
 			}
 		}
@@ -234,6 +235,12 @@ func (s *Client) request(ctx context.Context, method string, params []interface{
 	s.handlers[msg.ID] = c
 	s.handlersLock.Unlock()
 
+	defer func() {
+		s.handlersLock.Lock()
+		delete(s.handlers, msg.ID)
+		s.handlersLock.Unlock()
+	}()
+
 	var resp *container
 	select {
 	case resp = <-c:
@@ -244,10 +251,6 @@ func (s *Client) request(ctx context.Context, method string, params []interface{
 	if resp.err != nil {
 		return resp.err
 	}
-
-	s.handlersLock.Lock()
-	delete(s.handlers, msg.ID)
-	s.handlersLock.Unlock()
 
 	if v != nil {
 		err = json.Unmarshal(resp.content, v)
