@@ -1,6 +1,7 @@
 package electrum
 
 import (
+	"context"
 	"crypto/tls"
 	"encoding/json"
 	"errors"
@@ -93,12 +94,12 @@ func NewClient(opts *ClientOptions) *Client {
 
 // ConnectTCP connects to the remote server using TCP.
 // 		TODO: bring timeout with ctx
-func (s *Client) ConnectTCP(addr string) error {
+func (s *Client) ConnectTCP(ctx context.Context, addr string) error {
 	if s.transport != nil {
 		return ErrServerConnected
 	}
 
-	transport, err := NewTCPTransport(addr)
+	transport, err := NewTCPTransport(ctx, addr)
 	if err != nil {
 		return err
 	}

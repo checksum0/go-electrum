@@ -2,6 +2,7 @@ package electrum
 
 import (
 	"bufio"
+	"context"
 	"crypto/tls"
 	"log"
 	"net"
@@ -16,9 +17,10 @@ type TCPTransport struct {
 }
 
 // NewTCPTransport opens a new TCP connection to the remote server.
-func NewTCPTransport(addr string) (*TCPTransport, error) {
+func NewTCPTransport(ctx context.Context, addr string) (*TCPTransport, error) {
 	var d net.Dialer
-	conn, err := d.Dial("tcp", addr)
+
+	conn, err := d.DialContext(ctx, "tcp", addr)
 	if err != nil {
 		return nil, err
 	}

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"log"
 	"time"
 
@@ -13,7 +14,7 @@ func main() {
 		ReqTimeout:  time.Second * 10,
 	})
 
-	if err := client.ConnectTCP("bch.imaginary.cash:50001"); err != nil {
+	if err := client.ConnectTCP(context.Background(), "bch.imaginary.cash:50001"); err != nil {
 		log.Fatal(err)
 	}
 
