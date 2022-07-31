@@ -128,9 +128,9 @@ func (e *apiErr) Error() string {
 }
 
 type response struct {
-	ID     uint64  `json:"id"`
-	Method string  `json:"method"`
-	Error  *apiErr `json:"error"`
+	ID     uint64 `json:"id"`
+	Method string `json:"method"`
+	Error  string `json:"error"`
 }
 
 func (s *Client) listen() {
@@ -159,8 +159,8 @@ func (s *Client) listen() {
 					log.Printf("Unmarshal received message failed: %v", err)
 				}
 				result.err = fmt.Errorf("Unmarshal received message failed: %v", err)
-			} else if msg.Error != nil {
-				result.err = msg.Error
+			} else if msg.Error != "" {
+				result.err = errors.New(msg.Error)
 			}
 
 			if len(msg.Method) > 0 {
