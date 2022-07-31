@@ -21,7 +21,7 @@ type GetBlockHeaderResult struct {
 
 // GetBlockHeader returns the block header at a specific height.
 // https://electrumx.readthedocs.io/en/latest/protocol-methods.html#blockchain-block-header
-func (s *Server) GetBlockHeader(height uint32, checkpointHeight ...uint32) (*GetBlockHeaderResult, error) {
+func (s *Client) GetBlockHeader(height uint32, checkpointHeight ...uint32) (*GetBlockHeaderResult, error) {
 	if checkpointHeight != nil && checkpointHeight[0] != 0 {
 		if height > checkpointHeight[0] {
 			return nil, ErrCheckpointHeight
@@ -64,7 +64,7 @@ type GetBlockHeadersResult struct {
 
 // GetBlockHeaders return a concatenated chunk of block headers.
 // https://electrumx.readthedocs.io/en/latest/protocol-methods.html#blockchain-block-headers
-func (s *Server) GetBlockHeaders(startHeight, count uint32,
+func (s *Client) GetBlockHeaders(startHeight, count uint32,
 	checkpointHeight ...uint32) (*GetBlockHeadersResult, error) {
 
 	var resp GetBlockHeadersResp

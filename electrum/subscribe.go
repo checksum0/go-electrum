@@ -24,7 +24,7 @@ type SubscribeHeadersResult struct {
 
 // SubscribeHeaders subscribes to receive block headers notifications when new blocks are found.
 // https://electrumx.readthedocs.io/en/latest/protocol-methods.html#blockchain-headers-subscribe
-func (s *Server) SubscribeHeaders() (<-chan *SubscribeHeadersResult, error) {
+func (s *Client) SubscribeHeaders() (<-chan *SubscribeHeadersResult, error) {
 	var resp SubscribeHeadersResp
 
 	err := s.request("blockchain.headers.subscribe", []interface{}{}, &resp)
@@ -59,7 +59,7 @@ func (s *Server) SubscribeHeaders() (<-chan *SubscribeHeadersResult, error) {
 
 // ScripthashSubscription ...
 type ScripthashSubscription struct {
-	server    *Server
+	server    *Client
 	notifChan chan *SubscribeNotif
 
 	subscribedSH  []string
@@ -74,7 +74,7 @@ type SubscribeNotif struct {
 }
 
 // SubscribeScripthash ...
-func (s *Server) SubscribeScripthash() (*ScripthashSubscription, <-chan *SubscribeNotif) {
+func (s *Client) SubscribeScripthash() (*ScripthashSubscription, <-chan *SubscribeNotif) {
 	sub := &ScripthashSubscription{
 		server:        s,
 		notifChan:     make(chan *SubscribeNotif, 1),
@@ -213,7 +213,7 @@ func (sub *ScripthashSubscription) Resubscribe() error {
 
 // SubscribeMasternode subscribes to receive notifications when a masternode status changes.
 // https://electrumx.readthedocs.io/en/latest/protocol-methods.html#blockchain-headers-subscribe
-func (s *Server) SubscribeMasternode(collateral string) (<-chan string, error) {
+func (s *Client) SubscribeMasternode(collateral string) (<-chan string, error) {
 	var resp basicResp
 
 	err := s.request("blockchain.masternode.subscribe", []interface{}{collateral}, &resp)

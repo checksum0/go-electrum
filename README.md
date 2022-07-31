@@ -27,15 +27,15 @@ import (
 
 func main() {
 	// Establishing a new SSL connection to an ElectrumX server
-	server := electrum.NewServer()
-	if err := server.ConnectTCP("bch.imaginary.cash:50001"); err != nil {
+	client := electrum.ClientServer()
+	if err := client.ConnectTCP("bch.imaginary.cash:50001"); err != nil {
 		log.Fatal(err)
 	}
 
-	// Making sure connection is not closed with timed "server.ping" call
+	// Making sure connection is not closed with timed "client.ping" call
 	go func() {
 		for {
-			if err := server.Ping(); err != nil {
+			if err := client.Ping(); err != nil {
 				log.Fatal(err)
 			}
 			time.Sleep(60 * time.Second)
@@ -43,14 +43,14 @@ func main() {
 	}()
 
 	// Making sure we declare to the server what protocol we want to use
-	if err := server.ServerVersion(); err != nil {
+	if err := client.ServerVersion(); err != nil {
 		log.Fatal(err)
 	}
 
 	// Asking the server for the balance of address 1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa
 	// We must use scripthash of the address now as explained in ElectrumX docs
 	scripthash := "8b01df4e368ea28f8dc0423bcf7a4923e3a12d307c875e47a0cfbf90b5c39161"
-	balance, err := server.GetBalance(scripthash)
+	balance, err := client.GetBalance(scripthash)
 	if err != nil {
 		log.Fatal(err)
 	}

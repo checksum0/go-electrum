@@ -13,7 +13,7 @@ type GetBalanceResult struct {
 
 // GetBalance returns the confirmed and unconfirmed balance for a scripthash.
 // https://electrumx.readthedocs.io/en/latest/protocol-methods.html#blockchain-scripthash-get-balance
-func (s *Server) GetBalance(scripthash string) (GetBalanceResult, error) {
+func (s *Client) GetBalance(scripthash string) (GetBalanceResult, error) {
 	var resp GetBalanceResp
 
 	err := s.request("blockchain.scripthash.get_balance", []interface{}{scripthash}, &resp)
@@ -38,7 +38,7 @@ type GetMempoolResult struct {
 }
 
 // GetHistory returns the confirmed and unconfirmed history for a scripthash.
-func (s *Server) GetHistory(scripthash string) ([]*GetMempoolResult, error) {
+func (s *Client) GetHistory(scripthash string) ([]*GetMempoolResult, error) {
 	var resp GetMempoolResp
 
 	err := s.request("blockchain.scripthash.get_history", []interface{}{scripthash}, &resp)
@@ -50,7 +50,7 @@ func (s *Server) GetHistory(scripthash string) ([]*GetMempoolResult, error) {
 }
 
 // GetMempool returns the unconfirmed transacations of a scripthash.
-func (s *Server) GetMempool(scripthash string) ([]*GetMempoolResult, error) {
+func (s *Client) GetMempool(scripthash string) ([]*GetMempoolResult, error) {
 	var resp GetMempoolResp
 
 	err := s.request("blockchain.scripthash.get_mempool", []interface{}{scripthash}, &resp)
@@ -75,7 +75,7 @@ type ListUnspentResult struct {
 }
 
 // ListUnspent returns an ordered list of UTXOs for a scripthash.
-func (s *Server) ListUnspent(scripthash string) ([]*ListUnspentResult, error) {
+func (s *Client) ListUnspent(scripthash string) ([]*ListUnspentResult, error) {
 	var resp ListUnspentResp
 
 	err := s.request("blockchain.scripthash.listunspent", []interface{}{scripthash}, &resp)

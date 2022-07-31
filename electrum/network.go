@@ -59,8 +59,9 @@ type TCPTransport struct {
 }
 
 // NewTCPTransport opens a new TCP connection to the remote server.
-func NewTCPTransport(addr string, timeout time.Duration) (*TCPTransport, error) {
-	conn, err := net.DialTimeout("tcp", addr, timeout)
+func NewTCPTransport(addr string) (*TCPTransport, error) {
+	var d net.Dialer
+	conn, err := d.Dial("tcp", addr)
 	if err != nil {
 		return nil, err
 	}
@@ -103,6 +104,7 @@ func (t *TCPTransport) listen() {
 
 	for {
 		line, err := reader.ReadBytes(nl)
+		reader.ReadLine()
 		if err != nil {
 			t.errors <- err
 			break
@@ -144,15 +146,15 @@ type container struct {
 	err     error
 }
 
-type ServerOptions struct {
+type ClientOptions struct {
 	ConnTimeout time.Duration
 	ReqTimeout  time.Duration
 }
 
-// Server stores information about the remote server.
-type Server struct {
+// Client stores information about the remote server.
+type Client struct {
 	transport Transport
-	opts      *ServerOptions
+	opts      *ClientOptions
 
 	handlers     map[uint64]chan *container
 	handlersLock sync.RWMutex
@@ -167,8 +169,8 @@ type Server struct {
 }
 
 // NewServer initialize a new remote server.
-func NewServer(opts *ServerOptions) *Server {
-	s := &Server{
+func NewClient(opts *ClientOptions) *Client {
+	s := &Client{
 		handlers:     make(map[uint64]chan *container),
 		pushHandlers: make(map[string][]chan *container),
 
@@ -182,12 +184,13 @@ func NewServer(opts *ServerOptions) *Server {
 }
 
 // ConnectTCP connects to the remote server using TCP.
-func (s *Server) ConnectTCP(addr string) error {
+// 		TODO: bring timeout with ctx
+func (s *Client) ConnectTCP(addr string) error {
 	if s.transport != nil {
 		return ErrServerConnected
 	}
 
-	transport, err := NewTCPTransport(addr, s.opts.ConnTimeout)
+	transport, err := NewTCPTransport(addr)
 	if err != nil {
 		return err
 	}
@@ -199,7 +202,7 @@ func (s *Server) ConnectTCP(addr string) error {
 }
 
 // ConnectSSL connects to the remote server using SSL.
-func (s *Server) ConnectSSL(addr string, config *tls.Config) error {
+func (s *Client) ConnectSSL(addr string, config *tls.Config) error {
 	if s.transport != nil {
 		return ErrServerConnected
 	}
@@ -230,7 +233,7 @@ type response struct {
 	Error  *apiErr `json:"error"`
 }
 
-func (s *Server) listen() {
+func (s *Client) listen() {
 	for {
 		if s.IsShutdown() {
 			break
@@ -284,7 +287,7 @@ func (s *Server) listen() {
 	}
 }
 
-func (s *Server) listenPush(method string) <-chan *container {
+func (s *Client) listenPush(method string) <-chan *container {
 	c := make(chan *container, 1)
 	s.pushHandlersLock.Lock()
 	s.pushHandlers[method] = append(s.pushHandlers[method], c)
@@ -299,7 +302,7 @@ type request struct {
 	Params []interface{} `json:"params"`
 }
 
-func (s *Server) request(method string, params []interface{}, v interface{}) error {
+func (s *Client) request(method string, params []interface{}, v interface{}) error {
 	select {
 	case <-s.quit:
 		return ErrServerShutdown
@@ -356,7 +359,7 @@ func (s *Server) request(method string, params []interface{}, v interface{}) err
 	return nil
 }
 
-func (s *Server) Shutdown() {
+func (s *Client) Shutdown() {
 	if !s.IsShutdown() {
 		close(s.quit)
 	}
@@ -368,7 +371,7 @@ func (s *Server) Shutdown() {
 	s.pushHandlers = nil
 }
 
-func (s *Server) IsShutdown() bool {
+func (s *Client) IsShutdown() bool {
 	select {
 	case <-s.quit:
 		return true
