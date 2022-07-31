@@ -9,7 +9,6 @@ import (
 	"log"
 	"sync"
 	"sync/atomic"
-	"time"
 )
 
 const (
@@ -55,15 +54,9 @@ type container struct {
 	err     error
 }
 
-type ClientOptions struct {
-	ConnTimeout time.Duration
-	ReqTimeout  time.Duration
-}
-
 // Client stores information about the remote server.
 type Client struct {
 	transport Transport
-	opts      *ClientOptions
 
 	handlers     map[uint64]chan *container
 	handlersLock sync.RWMutex
@@ -78,15 +71,13 @@ type Client struct {
 }
 
 // NewServer initialize a new remote server.
-func NewClient(opts *ClientOptions) *Client {
+func NewClient() *Client {
 	s := &Client{
 		handlers:     make(map[uint64]chan *container),
 		pushHandlers: make(map[string][]chan *container),
 
 		Error: make(chan error),
 		quit:  make(chan struct{}),
-
-		opts: opts,
 	}
 
 	return s
@@ -111,12 +102,12 @@ func (s *Client) ConnectTCP(ctx context.Context, addr string) error {
 }
 
 // ConnectSSL connects to the remote server using SSL.
-func (s *Client) ConnectSSL(addr string, config *tls.Config) error {
+func (s *Client) ConnectSSL(ctx context.Context, addr string, config *tls.Config) error {
 	if s.transport != nil {
 		return ErrServerConnected
 	}
 
-	transport, err := NewSSLTransport(addr, config, s.opts.ConnTimeout)
+	transport, err := NewSSLTransport(ctx, addr, config)
 	if err != nil {
 		return err
 	}
@@ -211,7 +202,7 @@ type request struct {
 	Params []interface{} `json:"params"`
 }
 
-func (s *Client) request(method string, params []interface{}, v interface{}) error {
+func (s *Client) request(ctx context.Context, method string, params []interface{}, v interface{}) error {
 	select {
 	case <-s.quit:
 		return ErrServerShutdown
@@ -246,7 +237,7 @@ func (s *Client) request(method string, params []interface{}, v interface{}) err
 	var resp *container
 	select {
 	case resp = <-c:
-	case <-time.After(s.opts.ReqTimeout):
+	case <-ctx.Done():
 		return ErrTimeout
 	}
 

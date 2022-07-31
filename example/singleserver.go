@@ -9,16 +9,13 @@ import (
 )
 
 func main() {
-	client := electrum.NewClient(&electrum.ClientOptions{
-		ConnTimeout: time.Second * 10,
-		ReqTimeout:  time.Second * 10,
-	})
+	client := electrum.NewClient()
 
 	if err := client.ConnectTCP(context.Background(), "bch.imaginary.cash:50001"); err != nil {
 		log.Fatal(err)
 	}
 
-	serverVer, protocolVer, err := client.ServerVersion()
+	serverVer, protocolVer, err := client.ServerVersion(context.Background())
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -26,7 +23,7 @@ func main() {
 
 	go func() {
 		for {
-			if err := client.Ping(); err != nil {
+			if err := client.Ping(context.Background()); err != nil {
 				log.Fatal(err)
 			}
 			time.Sleep(60 * time.Second)

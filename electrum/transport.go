@@ -37,11 +37,12 @@ func NewTCPTransport(ctx context.Context, addr string) (*TCPTransport, error) {
 }
 
 // NewSSLTransport opens a new SSL connection to the remote server.
-func NewSSLTransport(addr string, config *tls.Config, timeout time.Duration) (*TCPTransport, error) {
-	dialer := net.Dialer{
-		Timeout: timeout,
+func NewSSLTransport(ctx context.Context, addr string, config *tls.Config) (*TCPTransport, error) {
+	dialer := tls.Dialer{
+		NetDialer: &net.Dialer{},
+		Config:    config,
 	}
-	conn, err := tls.DialWithDialer(&dialer, "tcp", addr, config)
+	conn, err := dialer.DialContext(ctx, "tcp", addr)
 	if err != nil {
 		return nil, err
 	}

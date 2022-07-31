@@ -1,5 +1,7 @@
 package electrum
 
+import "context"
+
 // GetBalanceResp represents the response to GetBalance().
 type GetBalanceResp struct {
 	Result GetBalanceResult `json:"result"`
@@ -13,10 +15,10 @@ type GetBalanceResult struct {
 
 // GetBalance returns the confirmed and unconfirmed balance for a scripthash.
 // https://electrumx.readthedocs.io/en/latest/protocol-methods.html#blockchain-scripthash-get-balance
-func (s *Client) GetBalance(scripthash string) (GetBalanceResult, error) {
+func (s *Client) GetBalance(ctx context.Context, scripthash string) (GetBalanceResult, error) {
 	var resp GetBalanceResp
 
-	err := s.request("blockchain.scripthash.get_balance", []interface{}{scripthash}, &resp)
+	err := s.request(ctx, "blockchain.scripthash.get_balance", []interface{}{scripthash}, &resp)
 	if err != nil {
 		return GetBalanceResult{}, err
 	}
@@ -38,10 +40,10 @@ type GetMempoolResult struct {
 }
 
 // GetHistory returns the confirmed and unconfirmed history for a scripthash.
-func (s *Client) GetHistory(scripthash string) ([]*GetMempoolResult, error) {
+func (s *Client) GetHistory(ctx context.Context, scripthash string) ([]*GetMempoolResult, error) {
 	var resp GetMempoolResp
 
-	err := s.request("blockchain.scripthash.get_history", []interface{}{scripthash}, &resp)
+	err := s.request(ctx, "blockchain.scripthash.get_history", []interface{}{scripthash}, &resp)
 	if err != nil {
 		return nil, err
 	}
@@ -50,10 +52,10 @@ func (s *Client) GetHistory(scripthash string) ([]*GetMempoolResult, error) {
 }
 
 // GetMempool returns the unconfirmed transacations of a scripthash.
-func (s *Client) GetMempool(scripthash string) ([]*GetMempoolResult, error) {
+func (s *Client) GetMempool(ctx context.Context, scripthash string) ([]*GetMempoolResult, error) {
 	var resp GetMempoolResp
 
-	err := s.request("blockchain.scripthash.get_mempool", []interface{}{scripthash}, &resp)
+	err := s.request(ctx, "blockchain.scripthash.get_mempool", []interface{}{scripthash}, &resp)
 	if err != nil {
 		return nil, err
 	}
@@ -75,10 +77,10 @@ type ListUnspentResult struct {
 }
 
 // ListUnspent returns an ordered list of UTXOs for a scripthash.
-func (s *Client) ListUnspent(scripthash string) ([]*ListUnspentResult, error) {
+func (s *Client) ListUnspent(ctx context.Context, scripthash string) ([]*ListUnspentResult, error) {
 	var resp ListUnspentResp
 
-	err := s.request("blockchain.scripthash.listunspent", []interface{}{scripthash}, &resp)
+	err := s.request(ctx, "blockchain.scripthash.listunspent", []interface{}{scripthash}, &resp)
 	if err != nil {
 		return nil, err
 	}

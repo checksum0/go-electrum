@@ -1,6 +1,7 @@
 package electrum
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"sync"
@@ -24,10 +25,10 @@ type SubscribeHeadersResult struct {
 
 // SubscribeHeaders subscribes to receive block headers notifications when new blocks are found.
 // https://electrumx.readthedocs.io/en/latest/protocol-methods.html#blockchain-headers-subscribe
-func (s *Client) SubscribeHeaders() (<-chan *SubscribeHeadersResult, error) {
+func (s *Client) SubscribeHeaders(ctx context.Context) (<-chan *SubscribeHeadersResult, error) {
 	var resp SubscribeHeadersResp
 
-	err := s.request("blockchain.headers.subscribe", []interface{}{}, &resp)
+	err := s.request(ctx, "blockchain.headers.subscribe", []interface{}{}, &resp)
 	if err != nil {
 		return nil, err
 	}
@@ -109,10 +110,10 @@ func (s *Client) SubscribeScripthash() (*ScripthashSubscription, <-chan *Subscri
 }
 
 // Add ...
-func (sub *ScripthashSubscription) Add(scripthash string, address ...string) error {
+func (sub *ScripthashSubscription) Add(ctx context.Context, scripthash string, address ...string) error {
 	var resp basicResp
 
-	err := sub.server.request("blockchain.scripthash.subscribe", []interface{}{scripthash}, &resp)
+	err := sub.server.request(ctx, "blockchain.scripthash.subscribe", []interface{}{scripthash}, &resp)
 	if err != nil {
 		return err
 	}
@@ -200,9 +201,9 @@ func (sub *ScripthashSubscription) RemoveAddress(address string) error {
 }
 
 // Resubscribe ...
-func (sub *ScripthashSubscription) Resubscribe() error {
+func (sub *ScripthashSubscription) Resubscribe(ctx context.Context) error {
 	for _, v := range sub.subscribedSH {
-		err := sub.Add(v)
+		err := sub.Add(ctx, v)
 		if err != nil {
 			return err
 		}
@@ -213,10 +214,10 @@ func (sub *ScripthashSubscription) Resubscribe() error {
 
 // SubscribeMasternode subscribes to receive notifications when a masternode status changes.
 // https://electrumx.readthedocs.io/en/latest/protocol-methods.html#blockchain-headers-subscribe
-func (s *Client) SubscribeMasternode(collateral string) (<-chan string, error) {
+func (s *Client) SubscribeMasternode(ctx context.Context, collateral string) (<-chan string, error) {
 	var resp basicResp
 
-	err := s.request("blockchain.masternode.subscribe", []interface{}{collateral}, &resp)
+	err := s.request(ctx, "blockchain.masternode.subscribe", []interface{}{collateral}, &resp)
 	if err != nil {
 		return nil, err
 	}
