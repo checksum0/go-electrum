@@ -9,9 +9,9 @@ import (
 	"github.com/btcsuite/btcd/txscript"
 )
 
-// AddressToElectrumScriptHex converts valid bitcoin address to electrum scriptHex sha256 encoded and reversed
+// AddressToElectrumScriptHash converts valid bitcoin address to electrum scriptHash sha256 encoded, reversed and encoded in hex
 // https://electrumx.readthedocs.io/en/latest/protocol-basics.html#script-hashes
-func AddressToElectrumScriptHex(addressStr string) (string, error) {
+func AddressToElectrumScriptHash(addressStr string) (string, error) {
 	address, err := btcutil.DecodeAddress(addressStr, &chaincfg.MainNetParams)
 	if err != nil {
 		return "", err
