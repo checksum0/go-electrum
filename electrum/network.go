@@ -143,7 +143,7 @@ func (s *Client) listen() {
 		}
 		select {
 		case <-s.quit:
-			break
+			return
 		case err := <-s.transport.Errors():
 			s.Error <- err
 			s.Shutdown()
