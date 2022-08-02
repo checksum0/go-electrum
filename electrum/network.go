@@ -70,9 +70,14 @@ type Client struct {
 	nextID uint64
 }
 
-// NewServer initialize a new remote server.
-func NewClient() *Client {
-	s := &Client{
+// NewClientTCP initialize a new client for remote server and connects to the remote server using TCP
+func NewClientTCP(ctx context.Context, addr string) (*Client, error) {
+	transport, err := NewTCPTransport(ctx, addr)
+	if err != nil {
+		return nil, err
+	}
+
+	c := &Client{
 		handlers:     make(map[uint64]chan *container),
 		pushHandlers: make(map[string][]chan *container),
 
@@ -80,42 +85,31 @@ func NewClient() *Client {
 		quit:  make(chan struct{}),
 	}
 
-	return s
+	c.transport = transport
+	go c.listen()
+
+	return c, nil
 }
 
-// ConnectTCP connects to the remote server using TCP.
-// 		TODO: bring timeout with ctx
-func (s *Client) ConnectTCP(ctx context.Context, addr string) error {
-	if s.transport != nil {
-		return ErrServerConnected
-	}
-
-	transport, err := NewTCPTransport(ctx, addr)
-	if err != nil {
-		return err
-	}
-
-	s.transport = transport
-	go s.listen()
-
-	return nil
-}
-
-// ConnectSSL connects to the remote server using SSL.
-func (s *Client) ConnectSSL(ctx context.Context, addr string, config *tls.Config) error {
-	if s.transport != nil {
-		return ErrServerConnected
-	}
-
+// NewClientSSL initialize a new client for remote server and connects to the remote server using SSL
+func NewClientSSL(ctx context.Context, addr string, config *tls.Config) (*Client, error) {
 	transport, err := NewSSLTransport(ctx, addr, config)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	s.transport = transport
-	go s.listen()
+	c := &Client{
+		handlers:     make(map[uint64]chan *container),
+		pushHandlers: make(map[string][]chan *container),
 
-	return nil
+		Error: make(chan error),
+		quit:  make(chan struct{}),
+	}
+
+	c.transport = transport
+	go c.listen()
+
+	return c, nil
 }
 
 type apiErr struct {

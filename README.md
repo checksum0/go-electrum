@@ -4,14 +4,10 @@ This makes it easy to write cryptocurrencies based services in a trustless fashi
 
 ![go-electrum](https://raw.githubusercontent.com/checksum0/go-electrum/master/media/logo.png)
 
-Packages provided
-
-* [electrum](https://godoc.org/github.com/checksum0/go-electrum/electrum) - Library for using JSON-RPC to talk directly to Electrum servers.
-
 ## Usage
-See [example/](https://github.com/checksum0/go-electrum/tree/master/example) for more.
+See [example/](https://github.com/Laconty/go-electrum/tree/master/example) for more.
 
-### electrum [![GoDoc](https://godoc.org/github.com/checksum0/go-electrum/electrum?status.svg)](https://godoc.org/github.com/checksum0/go-electrum/electrum)
+### electrum [![GoDoc](https://godoc.org/github.com/Laconty/go-electrum/electrum?status.svg)](https://godoc.org/github.com/Laconty/go-electrum/electrum)
 ```bash
 $ go get github.com/Laconty/go-electrum
 ```
