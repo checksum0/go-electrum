@@ -13,29 +13,31 @@ See [example/](https://github.com/checksum0/go-electrum/tree/master/example) for
 
 ### electrum [![GoDoc](https://godoc.org/github.com/checksum0/go-electrum/electrum?status.svg)](https://godoc.org/github.com/checksum0/go-electrum/electrum)
 ```bash
-$ go get -u github.com/checksum0/go-electrum/electrum
+$ go get github.com/Laconty/go-electrum
 ```
 
 ```go
 package main
 
 import (
-  "log"
+	"context"
+	"log"
+	"time"
 
-  "github.com/checksum0/go-electrum/electrum"
+	"github.com/Laconty/go-electrum/electrum"
 )
 
 func main() {
 	// Establishing a new SSL connection to an ElectrumX server
-	client := electrum.ClientServer()
-	if err := client.ConnectTCP("bch.imaginary.cash:50001"); err != nil {
+	client := electrum.NewClient()
+	if err := client.ConnectTCP(context.TODO(), "bch.imaginary.cash:50001"); err != nil {
 		log.Fatal(err)
 	}
-
+    ctx := context.TODO()
 	// Making sure connection is not closed with timed "client.ping" call
 	go func() {
 		for {
-			if err := client.Ping(); err != nil {
+			if err := client.Ping(ctx); err != nil {
 				log.Fatal(err)
 			}
 			time.Sleep(60 * time.Second)
@@ -43,15 +45,15 @@ func main() {
 	}()
 
 	// Making sure we declare to the server what protocol we want to use
-	if err := client.ServerVersion(); err != nil {
+	if _, _, err := client.ServerVersion(ctx); err != nil {
 		log.Fatal(err)
 	}
 
 	// Asking the server for the balance of address 1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa
 	// 8b01df4e368ea28f8dc0423bcf7a4923e3a12d307c875e47a0cfbf90b5c39161
 	// We must use scripthash of the address now as explained in ElectrumX docs
-	scripthash := electrum.AddressToElectrumScriptHex("1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa")
-	balance, err := client.GetBalance(scripthash)
+	scripthash, _ := electrum.AddressToElectrumScriptHash("1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa")
+	balance, err := client.GetBalance(ctx, scripthash)
 	if err != nil {
 		log.Fatal(err)
 	}
