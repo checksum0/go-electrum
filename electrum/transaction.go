@@ -1,11 +1,13 @@
 package electrum
 
+import "context"
+
 // BroadcastTransaction sends a raw transaction to the remote server to
 // be broadcasted on the server network.
 // https://electrumx.readthedocs.io/en/latest/protocol-methods.html#blockchain-transaction-broadcast
-func (s *Server) BroadcastTransaction(rawTx string) (string, error) {
+func (s *Client) BroadcastTransaction(ctx context.Context, rawTx string) (string, error) {
 	resp := &basicResp{}
-	err := s.request("blockchain.transaction.broadcast", []interface{}{rawTx}, &resp)
+	err := s.request(ctx, "blockchain.transaction.broadcast", []interface{}{rawTx}, &resp)
 	if err != nil {
 		return "", err
 	}
@@ -67,10 +69,10 @@ type ScriptPubkey struct {
 
 // GetTransaction gets the detailed information for a transaction.
 // https://electrumx.readthedocs.io/en/latest/protocol-methods.html#blockchain-transaction-get
-func (s *Server) GetTransaction(txHash string) (*GetTransactionResult, error) {
+func (s *Client) GetTransaction(ctx context.Context, txHash string) (*GetTransactionResult, error) {
 	var resp GetTransactionResp
 
-	err := s.request("blockchain.transaction.get", []interface{}{txHash, true}, &resp)
+	err := s.request(ctx, "blockchain.transaction.get", []interface{}{txHash, true}, &resp)
 	if err != nil {
 		return nil, err
 	}
@@ -80,10 +82,10 @@ func (s *Server) GetTransaction(txHash string) (*GetTransactionResult, error) {
 
 // GetRawTransaction gets a raw encoded transaction.
 // https://electrumx.readthedocs.io/en/latest/protocol-methods.html#blockchain-transaction-get
-func (s *Server) GetRawTransaction(txHash string) (string, error) {
+func (s *Client) GetRawTransaction(ctx context.Context, txHash string) (string, error) {
 	var resp basicResp
 
-	err := s.request("blockchain.transaction.get", []interface{}{txHash, false}, &resp)
+	err := s.request(ctx, "blockchain.transaction.get", []interface{}{txHash, false}, &resp)
 	if err != nil {
 		return "", err
 	}
@@ -105,10 +107,10 @@ type GetMerkleProofResult struct {
 
 // GetMerkleProof returns the merkle proof for a confirmed transaction.
 // https://electrumx.readthedocs.io/en/latest/protocol-methods.html#blockchain-transaction-get-merkle
-func (s *Server) GetMerkleProof(txHash string, height uint32) (*GetMerkleProofResult, error) {
+func (s *Client) GetMerkleProof(ctx context.Context, txHash string, height uint32) (*GetMerkleProofResult, error) {
 	var resp GetMerkleProofResp
 
-	err := s.request("blockchain.transaction.get_merkle", []interface{}{txHash, height}, &resp)
+	err := s.request(ctx, "blockchain.transaction.get_merkle", []interface{}{txHash, height}, &resp)
 	if err != nil {
 		return nil, err
 	}
@@ -118,10 +120,10 @@ func (s *Server) GetMerkleProof(txHash string, height uint32) (*GetMerkleProofRe
 
 // GetHashFromPosition returns the transaction hash for a specific position in a block.
 // https://electrumx.readthedocs.io/en/latest/protocol-methods.html#blockchain-transaction-id-from-pos
-func (s *Server) GetHashFromPosition(height, position uint32) (string, error) {
+func (s *Client) GetHashFromPosition(ctx context.Context, height, position uint32) (string, error) {
 	var resp basicResp
 
-	err := s.request("blockchain.transaction.id_from_pos", []interface{}{height, position, false}, &resp)
+	err := s.request(ctx, "blockchain.transaction.id_from_pos", []interface{}{height, position, false}, &resp)
 	if err != nil {
 		return "", err
 	}
@@ -143,10 +145,10 @@ type GetMerkleProofFromPosResult struct {
 
 // GetMerkleProofFromPosition returns the merkle proof for a specific position in a block.
 // https://electrumx.readthedocs.io/en/latest/protocol-methods.html#blockchain-transaction-id-from-pos
-func (s *Server) GetMerkleProofFromPosition(height, position uint32) (*GetMerkleProofFromPosResult, error) {
+func (s *Client) GetMerkleProofFromPosition(ctx context.Context, height, position uint32) (*GetMerkleProofFromPosResult, error) {
 	var resp GetMerkleProofFromPosResp
 
-	err := s.request("blockchain.transaction.id_from_pos", []interface{}{height, position, true}, &resp)
+	err := s.request(ctx, "blockchain.transaction.id_from_pos", []interface{}{height, position, true}, &resp)
 	if err != nil {
 		return nil, err
 	}

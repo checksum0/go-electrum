@@ -1,16 +1,14 @@
 package electrum
 
 import (
-	"bufio"
+	"context"
 	"crypto/tls"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"log"
-	"net"
 	"sync"
 	"sync/atomic"
-	"time"
 )
 
 const (
@@ -51,108 +49,14 @@ type Transport interface {
 	Close() error
 }
 
-// TCPTransport store informations about the TCP transport.
-type TCPTransport struct {
-	conn      net.Conn
-	responses chan []byte
-	errors    chan error
-}
-
-// NewTCPTransport opens a new TCP connection to the remote server.
-func NewTCPTransport(addr string, timeout time.Duration) (*TCPTransport, error) {
-	conn, err := net.DialTimeout("tcp", addr, timeout)
-	if err != nil {
-		return nil, err
-	}
-
-	tcp := &TCPTransport{
-		conn:      conn,
-		responses: make(chan []byte),
-		errors:    make(chan error),
-	}
-
-	go tcp.listen()
-
-	return tcp, nil
-}
-
-// NewSSLTransport opens a new SSL connection to the remote server.
-func NewSSLTransport(addr string, config *tls.Config, timeout time.Duration) (*TCPTransport, error) {
-	dialer := net.Dialer{
-		Timeout: timeout,
-	}
-	conn, err := tls.DialWithDialer(&dialer, "tcp", addr, config)
-	if err != nil {
-		return nil, err
-	}
-
-	tcp := &TCPTransport{
-		conn:      conn,
-		responses: make(chan []byte),
-		errors:    make(chan error),
-	}
-
-	go tcp.listen()
-
-	return tcp, nil
-}
-
-func (t *TCPTransport) listen() {
-	defer t.conn.Close()
-	reader := bufio.NewReader(t.conn)
-
-	for {
-		line, err := reader.ReadBytes(nl)
-		if err != nil {
-			t.errors <- err
-			break
-		}
-		if DebugMode {
-			log.Printf("%s [debug] %s -> %s", time.Now().Format("2006-01-02 15:04:05"), t.conn.RemoteAddr(), line)
-		}
-
-		t.responses <- line
-	}
-}
-
-// SendMessage sends a message to the remote server through the TCP transport.
-func (t *TCPTransport) SendMessage(body []byte) error {
-	if DebugMode {
-		log.Printf("%s [debug] %s <- %s", time.Now().Format("2006-01-02 15:04:05"), t.conn.RemoteAddr(), body)
-	}
-
-	_, err := t.conn.Write(body)
-	return err
-}
-
-// Responses returns chan to TCP transport responses.
-func (t *TCPTransport) Responses() <-chan []byte {
-	return t.responses
-}
-
-// Errors returns chan to TCP transport errors.
-func (t *TCPTransport) Errors() <-chan error {
-	return t.errors
-}
-
-func (t *TCPTransport) Close() error {
-	return t.conn.Close()
-}
-
 type container struct {
 	content []byte
 	err     error
 }
 
-type ServerOptions struct {
-	ConnTimeout time.Duration
-	ReqTimeout  time.Duration
-}
-
-// Server stores information about the remote server.
-type Server struct {
+// Client stores information about the remote server.
+type Client struct {
 	transport Transport
-	opts      *ServerOptions
 
 	handlers     map[uint64]chan *container
 	handlersLock sync.RWMutex
@@ -166,53 +70,46 @@ type Server struct {
 	nextID uint64
 }
 
-// NewServer initialize a new remote server.
-func NewServer(opts *ServerOptions) *Server {
-	s := &Server{
+// NewClientTCP initialize a new client for remote server and connects to the remote server using TCP
+func NewClientTCP(ctx context.Context, addr string) (*Client, error) {
+	transport, err := NewTCPTransport(ctx, addr)
+	if err != nil {
+		return nil, err
+	}
+
+	c := &Client{
 		handlers:     make(map[uint64]chan *container),
 		pushHandlers: make(map[string][]chan *container),
 
 		Error: make(chan error),
 		quit:  make(chan struct{}),
-
-		opts: opts,
 	}
 
-	return s
+	c.transport = transport
+	go c.listen()
+
+	return c, nil
 }
 
-// ConnectTCP connects to the remote server using TCP.
-func (s *Server) ConnectTCP(addr string) error {
-	if s.transport != nil {
-		return ErrServerConnected
-	}
-
-	transport, err := NewTCPTransport(addr, s.opts.ConnTimeout)
+// NewClientSSL initialize a new client for remote server and connects to the remote server using SSL
+func NewClientSSL(ctx context.Context, addr string, config *tls.Config) (*Client, error) {
+	transport, err := NewSSLTransport(ctx, addr, config)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	s.transport = transport
-	go s.listen()
+	c := &Client{
+		handlers:     make(map[uint64]chan *container),
+		pushHandlers: make(map[string][]chan *container),
 
-	return nil
-}
-
-// ConnectSSL connects to the remote server using SSL.
-func (s *Server) ConnectSSL(addr string, config *tls.Config) error {
-	if s.transport != nil {
-		return ErrServerConnected
+		Error: make(chan error),
+		quit:  make(chan struct{}),
 	}
 
-	transport, err := NewSSLTransport(addr, config, s.opts.ConnTimeout)
-	if err != nil {
-		return err
-	}
+	c.transport = transport
+	go c.listen()
 
-	s.transport = transport
-	go s.listen()
-
-	return nil
+	return c, nil
 }
 
 type apiErr struct {
@@ -225,12 +122,12 @@ func (e *apiErr) Error() string {
 }
 
 type response struct {
-	ID     uint64  `json:"id"`
-	Method string  `json:"method"`
-	Error  *apiErr `json:"error"`
+	ID     uint64 `json:"id"`
+	Method string `json:"method"`
+	Error  string `json:"error"`
 }
 
-func (s *Server) listen() {
+func (s *Client) listen() {
 	for {
 		if s.IsShutdown() {
 			break
@@ -240,7 +137,7 @@ func (s *Server) listen() {
 		}
 		select {
 		case <-s.quit:
-			break
+			return
 		case err := <-s.transport.Errors():
 			s.Error <- err
 			s.Shutdown()
@@ -256,8 +153,8 @@ func (s *Server) listen() {
 					log.Printf("Unmarshal received message failed: %v", err)
 				}
 				result.err = fmt.Errorf("Unmarshal received message failed: %v", err)
-			} else if msg.Error != nil {
-				result.err = msg.Error
+			} else if msg.Error != "" {
+				result.err = errors.New(msg.Error)
 			}
 
 			if len(msg.Method) > 0 {
@@ -278,13 +175,14 @@ func (s *Server) listen() {
 			s.handlersLock.RUnlock()
 
 			if ok {
+				// TODO: very rare case. fix this memory leak, when nobody will read channel (in case of error)
 				c <- result
 			}
 		}
 	}
 }
 
-func (s *Server) listenPush(method string) <-chan *container {
+func (s *Client) listenPush(method string) <-chan *container {
 	c := make(chan *container, 1)
 	s.pushHandlersLock.Lock()
 	s.pushHandlers[method] = append(s.pushHandlers[method], c)
@@ -299,7 +197,7 @@ type request struct {
 	Params []interface{} `json:"params"`
 }
 
-func (s *Server) request(method string, params []interface{}, v interface{}) error {
+func (s *Client) request(ctx context.Context, method string, params []interface{}, v interface{}) error {
 	select {
 	case <-s.quit:
 		return ErrServerShutdown
@@ -331,20 +229,22 @@ func (s *Server) request(method string, params []interface{}, v interface{}) err
 	s.handlers[msg.ID] = c
 	s.handlersLock.Unlock()
 
+	defer func() {
+		s.handlersLock.Lock()
+		delete(s.handlers, msg.ID)
+		s.handlersLock.Unlock()
+	}()
+
 	var resp *container
 	select {
 	case resp = <-c:
-	case <-time.After(s.opts.ReqTimeout):
+	case <-ctx.Done():
 		return ErrTimeout
 	}
 
 	if resp.err != nil {
 		return resp.err
 	}
-
-	s.handlersLock.Lock()
-	delete(s.handlers, msg.ID)
-	s.handlersLock.Unlock()
 
 	if v != nil {
 		err = json.Unmarshal(resp.content, v)
@@ -356,7 +256,7 @@ func (s *Server) request(method string, params []interface{}, v interface{}) err
 	return nil
 }
 
-func (s *Server) Shutdown() {
+func (s *Client) Shutdown() {
 	if !s.IsShutdown() {
 		close(s.quit)
 	}
@@ -368,7 +268,7 @@ func (s *Server) Shutdown() {
 	s.pushHandlers = nil
 }
 
-func (s *Server) IsShutdown() bool {
+func (s *Client) IsShutdown() bool {
 	select {
 	case <-s.quit:
 		return true
