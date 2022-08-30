@@ -1,4 +1,4 @@
-module github.com/Laconty/go-electrum
+module github.com/checksum0/go-electrum
 
 go 1.18
 
