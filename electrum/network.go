@@ -13,7 +13,7 @@ import (
 
 const (
 	// ClientVersion identifies the client version/name to the remote server
-	ClientVersion = "go-electrum1.0"
+	ClientVersion = "go-electrum1.1"
 
 	// ProtocolVersion identifies the support protocol version to the remote server
 	ProtocolVersion = "1.4"
