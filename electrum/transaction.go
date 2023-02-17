@@ -30,6 +30,7 @@ type GetTransactionResult struct {
 	Locktime      uint32               `json:"locktime"`
 	Size          uint32               `json:"size"`
 	Time          uint64               `json:"time"`
+	Txid          string               `json:"txid"`
 	Version       uint32               `json:"version"`
 	Vin           []Vin                `json:"vin"`
 	Vout          []Vout               `json:"vout"`
