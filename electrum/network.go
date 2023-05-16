@@ -112,6 +112,8 @@ func NewClientSSL(ctx context.Context, addr string, config *tls.Config) (*Client
 	return c, nil
 }
 
+// JSON-RPC 2.0 Error Object
+// See: https://www.jsonrpc.org/specificationJSON#error_object
 type apiErr struct {
 	Code    int    `json:"code"`
 	Message string `json:"message"`
@@ -121,10 +123,43 @@ func (e *apiErr) Error() string {
 	return fmt.Sprintf("errNo: %d, errMsg: %s", e.Code, e.Message)
 }
 
+// UnmarshalJSON defines a workaround for servers that respond with error
+// that doesn't follow the JSON-RPC 2.0 Error Object format, i.e. electrs/esplora.
+// See: https://github.com/Blockstream/esplora/issues/453
+func (e *apiErr) UnmarshalJSON(data []byte) error {
+	var v interface{}
+	if err := json.Unmarshal(data, &v); err != nil {
+		return fmt.Errorf("failed to unmarshal error [%s]: %v", data, err)
+	}
+
+	switch v := v.(type) {
+	case string:
+		e.Message = v
+	case map[string]interface{}:
+		if _, ok := v["code"]; ok {
+			e.Code = int(v["code"].(float64))
+		}
+
+		if _, ok := v["message"]; ok {
+			e.Message = fmt.Sprint(v["message"])
+		}
+
+		// if _, ok := v["data"]; ok {
+		// 	e.Data = fmt.Sprint(v["data"])
+		// }
+	default:
+		return fmt.Errorf("unsupported type: %v", v)
+	}
+
+	return nil
+}
+
+// JSON-RPC 2.0 Response Object
+// See: https://www.jsonrpc.org/specification#response_object
 type response struct {
-	ID     uint64 `json:"id"`
-	Method string `json:"method"`
-	Error  string `json:"error"`
+	ID     uint64  `json:"id"`
+	Method string  `json:"method"`
+	Error  *apiErr `json:"error"`
 }
 
 func (s *Client) listen() {
@@ -153,8 +188,8 @@ func (s *Client) listen() {
 					log.Printf("Unmarshal received message failed: %v", err)
 				}
 				result.err = fmt.Errorf("Unmarshal received message failed: %v", err)
-			} else if msg.Error != "" {
-				result.err = errors.New(msg.Error)
+			} else if msg.Error != nil {
+				result.err = msg.Error
 			}
 
 			if len(msg.Method) > 0 {
