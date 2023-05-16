@@ -143,10 +143,6 @@ func (e *apiErr) UnmarshalJSON(data []byte) error {
 		if _, ok := v["message"]; ok {
 			e.Message = fmt.Sprint(v["message"])
 		}
-
-		// if _, ok := v["data"]; ok {
-		// 	e.Data = fmt.Sprint(v["data"])
-		// }
 	default:
 		return fmt.Errorf("unsupported type: %v", v)
 	}
