@@ -185,7 +185,7 @@ func (s *Client) listen() {
 			err := json.Unmarshal(bytes, msg)
 			if err != nil {
 				if DebugMode {
-					log.Printf("Unmarshal received message failed: %v", err)
+					log.Printf("unmarshal received message [%s] failed: [%v]", bytes, err)
 				}
 				result.err = fmt.Errorf("Unmarshal received message failed: %v", err)
 			} else if msg.Error != nil {
