@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"net/url"
 	"sync"
 	"sync/atomic"
 )
@@ -68,6 +69,28 @@ type Client struct {
 	quit  chan struct{}
 
 	nextID uint64
+}
+
+// NewClient initializes a new client for remote server and connects to it using
+// a transport protocol resolved from the URL's protocol scheme.
+// A remote server URL should be provided in the `scheme://hostname:port` format
+// (e.g. `tcp://electrum.io:50001`).
+func NewClient(ctx context.Context, urlStr string, tlsConfig *tls.Config) (*Client, error) {
+	u, err := url.Parse(urlStr)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse url [%s]: [%w]", urlStr, err)
+	}
+
+	switch u.Scheme {
+	case "tcp":
+		return NewClientTCP(ctx, u.Host)
+	case "ssl":
+		return NewClientSSL(ctx, u.Host, tlsConfig)
+	case "ws", "wss":
+		return NewClientWebSocket(ctx, u.String(), tlsConfig)
+	}
+
+	return nil, fmt.Errorf("unsupported protocol scheme: [%s]", u.Scheme)
 }
 
 // NewClientTCP initialize a new client for remote server and connects to the remote server using TCP
