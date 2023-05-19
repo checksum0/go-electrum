@@ -112,6 +112,28 @@ func NewClientSSL(ctx context.Context, addr string, config *tls.Config) (*Client
 	return c, nil
 }
 
+// NewClientWebSocket initialize a new client for remote server and connects to
+// the remote server using WebSocket.
+func NewClientWebSocket(ctx context.Context, url string, config *tls.Config) (*Client, error) {
+	transport, err := NewWebSocketTransport(ctx, url, config)
+	if err != nil {
+		return nil, err
+	}
+
+	c := &Client{
+		handlers:     make(map[uint64]chan *container),
+		pushHandlers: make(map[string][]chan *container),
+
+		Error: make(chan error),
+		quit:  make(chan struct{}),
+	}
+
+	c.transport = transport
+	go c.listen()
+
+	return c, nil
+}
+
 // JSON-RPC 2.0 Error Object
 // See: https://www.jsonrpc.org/specificationJSON#error_object
 type apiErr struct {
