@@ -13,7 +13,11 @@ type WebSocketTransport struct {
 	conn      *websocket.Conn
 	responses chan []byte
 	errors    chan error
+	// close is a channel used for graceful connection closure
+	close chan struct{}
 }
+
+const webSocketClosingTimeout = 2 * time.Second
 
 // NewWebSocketTransport initializes new WebSocket transport.
 func NewWebSocketTransport(
@@ -42,6 +46,7 @@ func NewWebSocketTransport(
 		conn:      conn,
 		responses: make(chan []byte),
 		errors:    make(chan error),
+		close:     make(chan struct{}),
 	}
 
 	go ws.listen()
@@ -51,6 +56,7 @@ func NewWebSocketTransport(
 
 func (t *WebSocketTransport) listen() {
 	defer t.conn.Close()
+	defer close(t.close)
 
 	for {
 		_, msg, err := t.conn.ReadMessage()
@@ -64,7 +70,11 @@ func (t *WebSocketTransport) listen() {
 			)
 		}
 		if err != nil {
-			t.errors <- err
+			isNormalClose := websocket.IsCloseError(err, websocket.CloseNormalClosure)
+			if !isNormalClose {
+				t.errors <- err
+			}
+
 			break
 		}
 
@@ -100,5 +110,11 @@ func (t *WebSocketTransport) Close() error {
 		log.Printf("%s [error] %s -> close error: %s", time.Now().Format("2006-01-02 15:04:05"), t.conn.RemoteAddr(), err)
 	}
 
-	return t.conn.Close()
+	select {
+	case <-t.close:
+	case <-time.After(webSocketClosingTimeout):
+		return t.conn.Close()
+	}
+
+	return nil
 }
