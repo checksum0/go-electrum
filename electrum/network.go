@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"net/url"
 	"sync"
 	"sync/atomic"
 )
@@ -70,6 +71,28 @@ type Client struct {
 	nextID uint64
 }
 
+// NewClient initializes a new client for remote server and connects to it using
+// a transport protocol resolved from the URL's protocol scheme.
+// A remote server URL should be provided in the `scheme://hostname:port` format
+// (e.g. `tcp://electrum.io:50001`).
+func NewClient(ctx context.Context, urlStr string, tlsConfig *tls.Config) (*Client, error) {
+	u, err := url.Parse(urlStr)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse url [%s]: [%w]", urlStr, err)
+	}
+
+	switch u.Scheme {
+	case "tcp":
+		return NewClientTCP(ctx, u.Host)
+	case "ssl":
+		return NewClientSSL(ctx, u.Host, tlsConfig)
+	case "ws", "wss":
+		return NewClientWebSocket(ctx, u.String(), tlsConfig)
+	}
+
+	return nil, fmt.Errorf("unsupported protocol scheme: [%s]", u.Scheme)
+}
+
 // NewClientTCP initialize a new client for remote server and connects to the remote server using TCP
 func NewClientTCP(ctx context.Context, addr string) (*Client, error) {
 	transport, err := NewTCPTransport(ctx, addr)
@@ -112,6 +135,30 @@ func NewClientSSL(ctx context.Context, addr string, config *tls.Config) (*Client
 	return c, nil
 }
 
+// NewClientWebSocket initialize a new client for remote server and connects to
+// the remote server using WebSocket.
+func NewClientWebSocket(ctx context.Context, url string, config *tls.Config) (*Client, error) {
+	transport, err := NewWebSocketTransport(ctx, url, config)
+	if err != nil {
+		return nil, err
+	}
+
+	c := &Client{
+		handlers:     make(map[uint64]chan *container),
+		pushHandlers: make(map[string][]chan *container),
+
+		Error: make(chan error),
+		quit:  make(chan struct{}),
+	}
+
+	c.transport = transport
+	go c.listen()
+
+	return c, nil
+}
+
+// JSON-RPC 2.0 Error Object
+// See: https://www.jsonrpc.org/specificationJSON#error_object
 type apiErr struct {
 	Code    int    `json:"code"`
 	Message string `json:"message"`
@@ -121,10 +168,39 @@ func (e *apiErr) Error() string {
 	return fmt.Sprintf("errNo: %d, errMsg: %s", e.Code, e.Message)
 }
 
+// UnmarshalJSON defines a workaround for servers that respond with error
+// that doesn't follow the JSON-RPC 2.0 Error Object format, i.e. electrs/esplora.
+// See: https://github.com/Blockstream/esplora/issues/453
+func (e *apiErr) UnmarshalJSON(data []byte) error {
+	var v interface{}
+	if err := json.Unmarshal(data, &v); err != nil {
+		return fmt.Errorf("failed to unmarshal error [%s]: %v", data, err)
+	}
+
+	switch v := v.(type) {
+	case string:
+		e.Message = v
+	case map[string]interface{}:
+		if _, ok := v["code"]; ok {
+			e.Code = int(v["code"].(float64))
+		}
+
+		if _, ok := v["message"]; ok {
+			e.Message = fmt.Sprint(v["message"])
+		}
+	default:
+		return fmt.Errorf("unsupported type: %v", v)
+	}
+
+	return nil
+}
+
+// JSON-RPC 2.0 Response Object
+// See: https://www.jsonrpc.org/specification#response_object
 type response struct {
-	ID     uint64 `json:"id"`
-	Method string `json:"method"`
-	Error  string `json:"error"`
+	ID     uint64  `json:"id"`
+	Method string  `json:"method"`
+	Error  *apiErr `json:"error"`
 }
 
 func (s *Client) listen() {
@@ -150,11 +226,11 @@ func (s *Client) listen() {
 			err := json.Unmarshal(bytes, msg)
 			if err != nil {
 				if DebugMode {
-					log.Printf("Unmarshal received message failed: %v", err)
+					log.Printf("unmarshal received message [%s] failed: [%v]", bytes, err)
 				}
 				result.err = fmt.Errorf("Unmarshal received message failed: %v", err)
-			} else if msg.Error != "" {
-				result.err = errors.New(msg.Error)
+			} else if msg.Error != nil {
+				result.err = msg.Error
 			}
 
 			if len(msg.Method) > 0 {

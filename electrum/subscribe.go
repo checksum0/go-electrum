@@ -24,6 +24,11 @@ type SubscribeHeadersResult struct {
 }
 
 // SubscribeHeaders subscribes to receive block headers notifications when new blocks are found.
+//
+// BEWARE: This function can lead to a memory leak if the caller stops
+// pulling from the returned channel. See the SubscribeHeadersSingle method
+// for a safer alternative.
+//
 // https://electrumx.readthedocs.io/en/latest/protocol-methods.html#blockchain-headers-subscribe
 func (s *Client) SubscribeHeaders(ctx context.Context) (<-chan *SubscribeHeadersResult, error) {
 	var resp SubscribeHeadersResp
@@ -56,6 +61,37 @@ func (s *Client) SubscribeHeaders(ctx context.Context) (<-chan *SubscribeHeaders
 	}()
 
 	return respChan, nil
+}
+
+// SubscribeHeadersSingle subscribes to receive the header of the current
+// blockchain tip. Unlike SubscribeHeaders, this method only returns the tip
+// and does not listen for new block headers.
+//
+// Worth noting that this action still creates a new subscription in the Electrum
+// server. The protocol does neither support a single-shot request for the
+// current blockchain tip nor subscription cancellation. Although this limitation
+// causes a slight resource overhead on the client, it does not cause a memory
+// leak like the SubscribeHeaders method which spawns a goroutine that may hang
+// on the channel if the caller is no longer pulling from it.
+//
+// https://electrumx.readthedocs.io/en/latest/protocol-methods.html#blockchain-headers-subscribe
+func (s *Client) SubscribeHeadersSingle(ctx context.Context) (
+	*SubscribeHeadersResult,
+	error,
+) {
+	var resp SubscribeHeadersResp
+
+	err := s.request(
+		ctx,
+		"blockchain.headers.subscribe",
+		[]interface{}{},
+		&resp,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	return resp.Result, nil
 }
 
 // ScripthashSubscription ...

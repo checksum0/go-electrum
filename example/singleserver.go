@@ -5,7 +5,7 @@ import (
 	"log"
 	"time"
 
-	"github.com/checksum0/go-electrum/electrum"
+	"github.com/jpcummins/go-electrum/electrum"
 )
 
 func main() {
